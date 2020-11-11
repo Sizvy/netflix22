@@ -84,6 +84,7 @@ def search(request):
             show_lang = r[8]
             show_image = r[13]
             show_imdb = r[5]
+            #show nothing... just for testing
             director_name = temp_director
             director_link = r[18]
             single_row = {"director_name":director_name,"director_link":director_link,"show_imdb":show_imdb,"show_title":show_title,"show_genre":show_genre,"show_des":show_des,"show_age":show_age,"show_lang":show_lang,"show_image":show_image}
