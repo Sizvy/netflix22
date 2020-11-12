@@ -1,42 +1,41 @@
-{% load static %}
+﻿{% load static %}
 
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <!--navbar tags-->
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet" href="../../static/home/Base/css/navbar.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-        <script src="../../static/home/Base/js/navbar.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="../../static/home/Base/css/navbar.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="../../static/home/Base/js/navbar.js"></script>
 
     <!--added tags-->
     {% block tags %}{% endblock %}
     <!--title-->
-        <title>{%  block title %}NETFLIX{% endblock %}</title>
-    </head>
+    <title>{%  block title %}NETFLIX{% endblock %}</title>
+</head>
 
     <body>
     <!--navbar-->
     <div class="wrapper">
-         <header>
+        <header>
             <nav>
-               <div class="menu-icon">
-                  <i class="fa fa-bars fa-2x"></i>
-               </div>
-               <div class="logo">
-                  NETFLIX
-               </div>
-
-               <div class="menu">
-                  <ul>
-                     <li><a href="http://127.0.0.1:8000/home">HOME</a></li>
-                     <li><a href="http://127.0.0.1:8000/home/logout/">LOG OUT</a></li>
-                  </ul>
-               </div>
+                <div class="menu-icon">
+                    <i class="fa fa-bars fa-2x"></i>
+                </div>
+                <div class="logo">
+                    NETFLIX
+                </div>
+                <div class="menu">
+                    <ul>
+                        <li><a href="http://127.0.0.1:8000/home">HOME</a></li>
+                        <li><a href="http://127.0.0.1:8000/home/logout/">LOG OUT</a></li>
+                    </ul>
+                </div>
             </nav>
-         </header>
+        </header>
       </div>
     <!--navbar ended here-->
     <!--added template--->
@@ -47,5 +46,7 @@
             {% endblock %}
         </div>
     </body>
-
 </html>
+<style>
+
+</style>

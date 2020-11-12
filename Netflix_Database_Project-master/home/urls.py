@@ -23,7 +23,5 @@ urlpatterns = [
     path('home/' , views.home_notLoggedIn, name="home_NotLoggedIn"),
     path('home/logout/' , views.log_out, name="logout"),
     path('search/',views.search,name="search"),
-
-
-
+    path('search_by_year/',views.search_by_year,name="search_by_year"),
 ]
