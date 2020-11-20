@@ -3,15 +3,15 @@
     width: 100%;
     margin: 0;
     padding-bottom: 30px;
-    background-image: url(https://i.ibb.co/J5VPn0W/maxresdefault.jpg);
+    background-color: gray;
     }
 
     .searchbar{
     margin-bottom: auto;
     margin-top: auto;
-    height: 60px;
-    background-color: #353b48;
-    border-radius: 30px;
+    height: 40px;
+    background-color: white;
+    border-radius: 20px;
     padding: 10px;
     }
 

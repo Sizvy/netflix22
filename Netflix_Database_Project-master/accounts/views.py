@@ -171,13 +171,12 @@ def login(request):
         if request.POST.get("login"):
             email = request.POST.get("email")
             password = request.POST.get("password")
-            print(email)
-            print(password)
+
 
             ok = False
             user_ID = -1
             for r in result:
-                email_db = r[9]
+                email_db = r[10]
                 password_db = r[4]
                 if email_db == email and pbkdf2_sha256.verify(password,password_db):
                     user_ID = r[0]
@@ -252,3 +251,8 @@ def resetpass(response):
                 return redirect("http://127.0.0.1:8000/user/login/")
 
     return render(response, 'accounts\ResetPassword.html', {"error_msg": error_msg})
+
+
+
+def contact(request):
+    return render(request, 'accounts\contact.html')

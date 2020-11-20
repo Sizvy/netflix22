@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^login/' , views.login, name = "login"),
     url(r'^/' , views.login , name = "login_only"),
     url(r'^reset_password/' , views.resetpass, name="reset_pass"),
+    url(r'^contact/' , views.contact, name="contact"),
 
 
 ]

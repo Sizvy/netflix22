@@ -85,8 +85,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
         'NAME': 'ORCL', #select * from global_name;
-        'USER': 'NETFLIX',
-        'PASSWORD': '1234',
+        'USER': 'NEW_NETFLIX',
+        'PASSWORD': 'netflix123',
         'HOST': 'localhost',
         'PORT': '1521'
     }

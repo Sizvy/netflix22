@@ -1,4 +1,4 @@
-{% extends 'home/base.html' %}
+﻿{% extends 'home/base.html' %}
 
 {% block tags %}
 <meta charset="UTF-8">
@@ -21,6 +21,7 @@
 
 <!-- Main CSS-->
 <link href="../../static/accounts/Register/css/main.css" rel="stylesheet" media="all">
+
 {% endblock %}
 
 {%  block title %}SUBSCRIBE{% endblock %}
@@ -46,30 +47,6 @@
 							<div class="input-group">
 								<label class="label">credit card password</label>
 								<input class="input--style-4" type="password" name="password" value={{ form_values.password }}>
-							</div>
-						</div>
-					</div>
-					<div class="row row-space">
-						<div class="col-2">
-							<div class="input-group">
-								<label class="label">Subscription Plan</label>
-								<div class="p-t-10">
-									<label class="radio-container m-r-45">
-										Monthly(6.25$)
-										<input type="checkbox" class="radio" value="monthly" name="period">
-										<span class="checkmark"></span>
-									</label>
-									<label class="radio-container">
-										Yearly(70$)
-										<input type="checkbox" class="radio" value="yearly" name="period">
-										<span class="checkmark"></span>
-									</label>
-									<label class="radio-container">
-										For Single Show(0.99$)
-										<input type="checkbox" class="radio" value="single" name="period">
-										<span class="checkmark"></span>
-									</label>
-								</div>
 							</div>
 						</div>
 					</div>
@@ -120,6 +97,10 @@
 							<div class="input-group">
 								<label class="label">Favourite Genre</label>
 								<input class="input--style-4" type="text" name="favgen" value={{ form_values.favgen }}>
+							</div>
+							<div class="input-group">
+								<label class="label">Show Title</label>
+								<input class="input--style-4" type="text" name="sh_title" value={{ form_values.sh_title }}>
 							</div>
 						</div>
 					</div>

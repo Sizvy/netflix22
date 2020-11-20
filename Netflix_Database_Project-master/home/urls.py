@@ -19,10 +19,11 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    path('' , views.home_notLoggedIn),
-    path('home/' , views.home_notLoggedIn, name="home_NotLoggedIn"),
-    path('home/logout/' , views.log_out, name="logout"),
-    path('search/',views.search,name="search"),
-    path('search_by_year/',views.search_by_year,name="search_by_year"),
+    path('', views.home_notLoggedIn),
+    path('home/', views.home_notLoggedIn, name="homepage"),
+    path('home/logout/', views.log_out, name="logout"),
+    path('genre/<str:genre_name>/', views.genre, name="genre_view"),
+    path('shows/<str:show_type>/', views.shows, name="shows_view"),
+    path('movies/', views.movies, name="movies_view"),
     path('home/subscribe/', views.subscribe,name="subscribe"),
 ]
