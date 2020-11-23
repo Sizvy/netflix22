@@ -141,15 +141,14 @@
         </div>{% endcomment %}
 
         {% for show in shows %}
-        <div class="dynamic">
+        <div class="dynamic" id = "{{ show.show_id }}">
             <div class="hovereffect">
                 <img class="img-responsive" src="{{ show.show_image }}" alt="">
                 <div class="overlay">
                    <h2>{{ show.show_title }}</h2>
                     <h4>{{ show.show_genre }}</h4>
                     <br><br><br><br>
-                    <h4>IMDB Rating: {{show.show_imdb}}</h4>
-                    <h5><a href="http://127.0.0.1:8000/home/subscribe/">Subscribe for this show(0.99$)</a></h5>
+                     <h4>IMDB Rating: {{show.show_imdb}}</h4>
                 </div>
             </div>
         </div>
@@ -367,6 +366,11 @@ transition-delay:.2s;
        else
           e.style.display = 'block';
         }
+
+        $('.dynamic').click(function(){
+                var id = $(this).attr('id');
+                window.location = "http://127.0.0.1:8000/movies/"+id;
+            });
 
     </script>
 

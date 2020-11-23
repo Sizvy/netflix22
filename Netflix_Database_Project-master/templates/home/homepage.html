@@ -141,7 +141,7 @@
         </div>{% endcomment %}
 
         {% for show in shows %}
-        <div class="dynamic">
+        <div class="dynamic" id = "{{ show.show_id }}">
             <div class="hovereffect">
                 <img class="img-responsive" src="{{ show.show_image }}" alt="">
                 <div class="overlay">
@@ -365,7 +365,14 @@ transition-delay:.2s;
           e.style.display = 'none';
        else
           e.style.display = 'block';
+
         }
+
+
+            $('.dynamic').click(function(){
+                var id = $(this).attr('id');
+                window.location = "http://127.0.0.1:8000/movies/"+id;
+            });
 
     </script>
 
