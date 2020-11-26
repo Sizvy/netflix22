@@ -745,6 +745,21 @@ def movies(response):
 def single_show(response,show_id):
     if response.session.get('is_logged_in', False) == True:
 
+        if response.method == 'POST':
+            if response.POST.get('star1'):
+                rate = 1
+            elif response.POST.get('star2'):
+                rate = 2
+            elif response.POST.get('star3'):
+                rate = 3
+            elif response.POST.get('star4'):
+                rate = 4
+            elif response.POST.get('star5'):
+                rate = 5
+            else:
+                rate = 0
+            print(rate)
+
         cursor = connection.cursor()
         sql = "SELECT * FROM SHOW WHERE SHOW_ID = %s"
         cursor.execute(sql, [show_id])
@@ -815,10 +830,40 @@ def single_show(response,show_id):
                 company_name = r_comp[0]
                 company_logo = r_comp[1]
 
+            #is subscribed?
 
 
+            user_id = response.session.get('user_ID')
+            cursor = connection.cursor()
+            sql = "SELECT * from SUBSCRIPTION sub WHERE sub.USER_IDSUB = %s AND sub.SHOW_IDSUB = %s"
+            cursor.execute(sql, [user_id, show_id])
+            result_sub = cursor.fetchall()
+            cursor.close()
 
-            single_row = {"show_imdb": show_imdb,
+            cnt = 0
+            for r_sub in result_sub:
+                cnt += 1
+
+            is_sub = 0
+            if cnt > 0:
+                is_sub = 1
+
+            cursor = connection.cursor()
+            sql = "SELECT NVL(s.SERIES_ID, -1) from SHOW s WHERE s.SHOW_ID = %s"
+            cursor.execute(sql, [show_id])
+            result_is_series = cursor.fetchall()
+            cursor.close()
+
+            is_series = 0
+            for r_is_series in result_is_series:
+                if r_is_series[0] == -1:
+                    is_series = 0
+                else:
+                    is_series = 1
+
+
+            single_row = {"show_id": show_id,
+                          "show_imdb": show_imdb,
                           "show_title": show_title,
                           "show_genre": show_genre,
                           "show_des": show_des,
@@ -832,7 +877,10 @@ def single_show(response,show_id):
                           "director_link": dir_wiki_link,
                           "actor_list": actor_list,
                           "company_name": company_name,
-                          "company_logo": company_logo}
+                          "company_logo": company_logo,
+                          "is_sub": is_sub,
+                          "is_series": is_series}
+
             show_list.append(single_row)
             print("cl: "+company_logo)
 
@@ -855,6 +903,7 @@ def single_series(response, series_identifier):
         cursor.execute(sql,[series_id,season_no])
         result = cursor.fetchall()
         cursor.close()
+
 
 
         title=""
@@ -896,10 +945,35 @@ def single_series(response, series_identifier):
         imdb_rating = round(tot_imdb/cnt, 2)
         user_rating = round(tot_user / cnt, 2)
 
+
+        #is_subscribed
+        cursor = connection.cursor()
+        sql = "SELECT * FROM SHOW s, SERIES se,SUBSCRIPTION sub,USERS u" \
+              " WHERE s.SERIES_ID = se.SERIES_ID AND s.SEASON_NO = se.SEASON_NO" \
+              " AND s.SHOW_ID = sub.SHOW_IDSUB" \
+              " AND u.USER_ID = sub.USER_IDSUB" \
+              " AND u.USER_ID = %s" \
+              " AND se.SERIES_ID = %s AND se.SEASON_NO = %s"
+
+        user_id = response.session.get('user_ID')
+        cursor.execute(sql, [user_id, series_id, season_no])
+        result_is_sub = cursor.fetchall()
+        cursor.close()
+
+        cnt = 0
+        is_subscribed = 0
+        for r_sub in result_is_sub:
+            cnt += 1
+
+        if cnt > 0:
+            is_subscribed = 1
+
+
+
         series = {"series_id":series_id,"season_no":season_no, "title": title, "category":category,
                   "start_year": start_year, "end_year": end_year, "cover_image": cover_image, "status": status,
                   "imdb_rating": imdb_rating, "user_rating": user_rating, "language": language, "genre": genre,
-                  "episode_list": show_list}
+                  "episode_list": show_list, "is_subscribed": is_subscribed}
         print(series)
 
         return render(response, 'home\series_view.html', {"series": series})
@@ -908,6 +982,229 @@ def single_series(response, series_identifier):
 
     else:
         return redirect("http://127.0.0.1:8000/user/login")
+
+
+
+
+def subscribe_show(response,show_identifier):
+    if response.session.get('is_logged_in', False) == True:
+
+        error_msg = ""
+        show_identifier = show_identifier.split("_")
+        show_type = show_identifier[0]
+
+        if show_type == "show":
+            print("show")
+            show_id = show_identifier[1]
+            print(show_id)
+
+            amount = 0.99
+
+            if response.method == "POST":
+                print("here")
+                if response.POST.get("pay") == "clicked":
+                    print(response.POST)
+                    card_number = response.POST.get("card_number")
+                    exp_date = response.POST.get("exp_date")
+                    username = response.POST.get("username")
+                    password = response.POST.get("password")
+
+                    if card_number == "" or exp_date == "" or username == "" or password == "":
+                        error_msg = "No field can be left empty"
+                    else:
+                        cursor = connection.cursor()
+                        sql = "SELECT * FROM CARD c" \
+                              " WHERE c.CARD_ID = %s" \
+                              " AND c.USER_NAME = %s" \
+                              " AND c.CARD_PASS = %s"
+
+                        cursor.execute(sql, [card_number, username, password])
+                        result = cursor.fetchall()
+                        cursor.close()
+
+                        cnt = 0
+                        balance = 0
+                        for r in result:
+                            balance = r[4]
+                            cnt += 1
+
+                        if cnt > 0:
+                            val = float(balance) - amount
+
+                            if val >= 0:
+                                cursor = connection.cursor()
+                                sql = "UPDATE CARD SET BALANCE = %s WHERE CARD_ID = %s"
+                                cursor.execute(sql, [val, card_number])
+                                cursor.close()
+
+                                # generate bill_id
+                                cursor = connection.cursor()
+                                sql_ID = "SELECT NVL(MAX(BILL_ID),0) FROM BILLING_HISTORY"
+                                cursor.execute(sql_ID)
+                                result = cursor.fetchall()
+                                for i in result:
+                                    bill_id = i[0]
+                                cursor.close()
+                                bill_id = bill_id + 1
+
+                                bill_desc = "EMPTY"
+                                service_period = 6
+                                cursor = connection.cursor()
+                                sql = "INSERT INTO BILLING_HISTORY VALUES(%s,SYSDATE,%s,%s,%s,%s)"
+                                cursor.execute(sql, [bill_id, bill_desc, service_period, amount, card_number])
+                                cursor.close()
+
+                                # generate sub_id
+                                cursor = connection.cursor()
+                                sql_ID = "SELECT NVL(MAX(SUBSCRIPTION_ID),0) FROM SUBSCRIPTION"
+                                cursor.execute(sql_ID)
+                                result_sub = cursor.fetchall()
+                                for i in result_sub:
+                                    sub_id = i[0]
+                                cursor.close()
+                                sub_id = sub_id + 1
+
+                                sub_status = "ACTIVE"
+                                cursor = connection.cursor()
+                                sql = "INSERT INTO SUBSCRIPTION VALUES(%s,ADD_MONTHS(SYSDATE,%s),%s,%s,%s,%s)"
+                                user_id = response.session.get('user_ID')
+                                cursor.execute(sql, [sub_id, service_period, sub_status, user_id, show_id, bill_id])
+                                cursor.close()
+                                print("Successfully Subscribed")
+
+                                return redirect("http://127.0.0.1:8000/movies/"+show_id+"/")
+
+
+
+
+
+                            else:
+                                error_msg = "Insufficient Balance !!!"
+
+                        else:
+                            print("Invalid Card Information")
+                            error_msg = "Invalid Card Information"
+
+
+        elif show_type == "series":
+            print("series")
+            series_id = show_identifier[1]
+            season_no = show_identifier[2]
+            print(series_id)
+            print(season_no)
+
+            cursor = connection.cursor()
+            sql = "SELECT DISTINCT SHOW_ID FROM SHOW s, SERIES se" \
+                  " WHERE s.SERIES_ID = se.SERIES_ID" \
+                  " AND s.SEASON_NO = se.SEASON_NO" \
+                  " AND s.SERIES_ID = %s AND s.SEASON_NO = %s"
+
+            cursor.execute(sql, [series_id, season_no])
+            result_shows = cursor.fetchall()
+            cursor.close()
+
+            num_of_episodes = 0
+            for r_show in result_shows:
+                num_of_episodes += 1
+
+            amount_epi = 0.99
+            amount = amount_epi*num_of_episodes
+            amount = round(amount, 2)
+
+            if response.method == "POST":
+                print(response.POST)
+                card_number = response.POST.get("card_number")
+                exp_date = response.POST.get("exp_date")
+                username = response.POST.get("username")
+                password = response.POST.get("password")
+
+                if card_number == "" or exp_date == "" or username == "" or password == "":
+                    error_msg = "No field can be left empty"
+                else:
+                    cursor = connection.cursor()
+                    sql = "SELECT * FROM CARD c" \
+                          " WHERE c.CARD_ID = %s" \
+                          " AND c.USER_NAME = %s" \
+                          " AND c.CARD_PASS = %s"
+
+                    cursor.execute(sql, [card_number, username, password])
+                    result = cursor.fetchall()
+                    cursor.close()
+
+                    cnt = 0
+                    balance = 0
+                    for r in result:
+                        balance = r[4]
+                        cnt += 1
+
+                    if cnt > 0:
+                        val = float(balance) - amount
+
+                        if val >= 0:
+                            cursor = connection.cursor()
+                            sql = "UPDATE CARD SET BALANCE = %s WHERE CARD_ID = %s"
+                            cursor.execute(sql, [val, card_number])
+                            cursor.close()
+
+                            # generate bill_id
+                            cursor = connection.cursor()
+                            sql_ID = "SELECT NVL(MAX(BILL_ID),0) FROM BILLING_HISTORY"
+                            cursor.execute(sql_ID)
+                            result = cursor.fetchall()
+                            for i in result:
+                                bill_id = i[0]
+                            cursor.close()
+                            bill_id = bill_id + 1
+
+                            bill_desc = "EMPTY"
+                            service_period = 6
+                            cursor = connection.cursor()
+                            sql = "INSERT INTO BILLING_HISTORY VALUES(%s,SYSDATE,%s,%s,%s,%s)"
+                            cursor.execute(sql, [bill_id, bill_desc, service_period, amount, card_number])
+                            cursor.close()
+
+
+                            for r in result_shows:
+                                show_id = r[0]
+                                print(show_id)
+                                # generate sub_id
+                                cursor = connection.cursor()
+                                sql_ID = "SELECT NVL(MAX(SUBSCRIPTION_ID),0) FROM SUBSCRIPTION"
+                                cursor.execute(sql_ID)
+                                result_sub = cursor.fetchall()
+                                for i in result_sub:
+                                    sub_id = i[0]
+                                cursor.close()
+                                sub_id = sub_id + 1
+
+                                sub_status = "ACTIVE"
+                                cursor = connection.cursor()
+                                sql = "INSERT INTO SUBSCRIPTION VALUES(%s,ADD_MONTHS(SYSDATE,%s),%s,%s,%s,%s)"
+                                user_id = response.session.get('user_ID')
+                                cursor.execute(sql, [sub_id, service_period, sub_status, user_id, show_id, bill_id])
+                                cursor.close()
+
+                                print("Successfully Subscribed")
+
+                            return redirect("http://127.0.0.1:8000/series/" + series_id + "_"+season_no+"/")
+
+
+                        else:
+                            error_msg = "Insufficient Balance !!!"
+
+                    else:
+                        print("Invalid Card Information")
+                        error_msg = "Invalid Card Information"
+
+        show = {"amount": amount}
+
+        return render(response,'home\subscribe.html', {"show": show, "error_msg": error_msg})
+
+    else:
+        return redirect("http://127.0.0.1:8000/user/login")
+
+
+
 
 def pushintoDBsettings(l,user_id,change):
     #encrypt password
@@ -924,7 +1221,7 @@ def pushintoDBsettings(l,user_id,change):
 def settings(response):
     error_msg = ""
     user_id = -1
-    if response.session.get('is_logged_in',False) == True:
+    if response.session.get('is_logged_in', False) == True:
         user_id = response.session.get('user_ID', -1)
     if response.POST.get("update"):
         first_name = response.POST.get("fname")
@@ -933,10 +1230,10 @@ def settings(response):
         fav_gen = response.POST.get("fgenre")
         password = response.POST.get("password")
         confpass = response.POST.get("confpass")
-        
+
         cursor = connection.cursor()
         sql_show = "SELECT * FROM USERS WHERE USER_ID = %s"
-        cursor.execute(sql_show,[user_id])
+        cursor.execute(sql_show, [user_id])
         result = cursor.fetchall()
         for r in result:
             f_name_db = r[2]
@@ -980,8 +1277,6 @@ def settings(response):
         elif password != "" and password != confpass:
             error_msg = "Passwords do not match"
         else:
-            pushintoDBsettings(l,user_id,change)
+            pushintoDBsettings(l, user_id, change)
             return redirect("http://127.0.0.1:8000/home/")
-    return render(response,'home\settings.html',{"error_msg":error_msg})
-
-
+    return render(response, 'home\settings.html', {"error_msg": error_msg})

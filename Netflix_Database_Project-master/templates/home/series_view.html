@@ -10,6 +10,8 @@
 
     <link rel="stylesheet" href="../../static/home/single_show/css/plugins.css">
 	<link rel="stylesheet" href="../../static/home/single_show/css/style.css">
+	<script src="../../static/home/single_show/js/main.js" defer></script>
+
 
 
 {% endblock %}
@@ -38,11 +40,19 @@
 				<div class="movie-img sticky-sb">
 					<img src={{ series.cover_image }} , width = 400px, height=1000px>
 					<div class="movie-btn">
+                        {% if series.is_subscribed == 0 %}
+                            <div class="btn-transform transform-vertical">
 
-						<div class="btn-transform transform-vertical">
-							<div><a href="#" class="item item-1 yellowbtn"> <i class="ion-card"></i> Subscribe</a></div>
-							<div><a href="#" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
-						</div>
+                                <div><a href="http://127.0.0.1:8000/subscribe/series_{{ series.series_id }}_{{ series.season_no }}" class="item item-1 yellowbtn"> <i class="ion-card"></i> Subscribe</a></div>
+                                <div><a href="http://127.0.0.1:8000/subscribe/series_{{ series.series_id }}_{{ series.season_no }}" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
+                            </div>
+                        {% elif series.is_subscribed == 1 %}
+                             <div class="btn-transform transform-vertical">
+                                <div><a href="http://127.0.0.1:8000/unsubscribe/series_{{ series.series_id }}_{{ series.season_no }}" class="item item-1 yellowbtn"> <i class="ion-card"></i> Unsubscribe</a></div>
+                                <div><a href="http://127.0.0.1:8000/unsubscribe/series_{{ series.series_id }}_{{ series.season_no }}" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
+                            </div>
+                        {% endif %}
+
 					</div>
 				</div>
 			</div>
@@ -69,13 +79,15 @@
 								<span class="rv">56 Reviews</span>
 							</p>
 						</div>
-						<div class="rate-star">
-							<p>Rate This Movie:  </p>
-							<i class="ion-ios-star"></i>
-							<i class="ion-ios-star"></i>
-							<i class="ion-ios-star"></i>
-							<i class="ion-ios-star"></i>
-							<i class="ion-ios-star-outline"></i>
+						<div class="col text-center">
+							<form class="rate-form" method="POST" onsubmit="return true">
+								{% csrf_token %}
+								<button name="star1" type="submit" class="fa fa-star fa-3x rating-btn" id="first" value="clicked"></button>
+								<button name="star2" type="submit" class="fa fa-star fa-3x rating-btn" id="second" value="clicked"></button>
+								<button name="star3" type="submit" class="fa fa-star fa-3x rating-btn" id="third" value="clicked"></button>
+								<button name="star4" type="submit" class="fa fa-star fa-3x rating-btn" id="fourth" value="clicked"></button>
+								<button name="star5" type="submit" class="fa fa-star fa-3x rating-btn" id="fifth" value="clicked"></button>
+							</form>
 						</div>
 					</div>
 					<div class="movie-tabs">
@@ -778,8 +790,16 @@
 .gap{
     padding-top: 200px;
 }
+    .checked {
+        color: red;
+    }
+
+    .rating-btn {
+        background-color: inherit !important;
+        border: 0 !important;
+    }
 </style>
-<script src="../../static/home/home_page/js/production.min.js"></script>
+
 
 
 
