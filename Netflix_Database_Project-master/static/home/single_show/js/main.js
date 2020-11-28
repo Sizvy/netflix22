@@ -1,4 +1,3 @@
-
 const one = document.getElementById('first')
 const two = document.getElementById('second')
 const three = document.getElementById('third')
@@ -74,4 +73,28 @@ if (one) {
     arr.forEach(item => item.addEventListener('mouseover', (event) => {
         handleSelect(event.target.id)
     }))
+
+    arr.forEach(item => item.addEventListener('click', (event) => {
+        const val = event.target.id
+
+        let isSubmit = false
+
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            const id = e.target.id
+            //alert(id)
+            const val_num = getnumericValue(val)
+
+            $.ajax({
+                type: 'POST',
+                path: 'home/rating/',
+                data: {
+                    'csrfmiddlewaretoken': csrf[0].value,
+                    'show_id': id,
+                    'rating': val_num
+                }
+            })
+        })
+    }))
 }
+

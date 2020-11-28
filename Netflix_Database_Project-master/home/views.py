@@ -744,21 +744,96 @@ def movies(response):
 
 def single_show(response,show_id):
     if response.session.get('is_logged_in', False) == True:
+        ok = False
+        rate = 0
+        if response.method == "POST":
+            print("here")
+            print(response.POST)
 
-        if response.method == 'POST':
-            if response.POST.get('star1'):
-                rate = 1
-            elif response.POST.get('star2'):
-                rate = 2
-            elif response.POST.get('star3'):
-                rate = 3
-            elif response.POST.get('star4'):
-                rate = 4
-            elif response.POST.get('star5'):
-                rate = 5
-            else:
-                rate = 0
-            print(rate)
+
+            if response.POST.get("review_btn"):
+                print("success")
+                review = response.POST.get("review")
+                connection.autocommit = True
+
+                user_id = response.session.get('user_ID')
+                print(user_id)
+                cursor = connection.cursor()
+                sql = "UPDATE RATED SET FEEDBACK = %s WHERE SHOW_IDRATE = %s AND USER_IDRATE = %s"
+                cursor.execute(sql, [review, show_id, user_id])
+                cursor.close()
+
+
+
+            if response.POST.get("rating"):
+                if response.POST.get("rating") == "1":
+                    ok = True
+                    rate = 1
+                elif response.POST.get("rating") == "2":
+                    ok = True
+                    rate = 2
+                elif response.POST.get("rating") == "3":
+                    ok = True
+                    rate = 3
+                elif response.POST.get("rating") == "4":
+                    ok = True
+                    rate = 4
+                elif response.POST.get("rating") == "5":
+                    ok = True
+                    rate = 5
+
+
+                if ok:
+                    connection.autocommit = True
+                    print("rating" + str(rate))
+                    feedback = "Nothing"
+
+                    user_id = response.session.get('user_ID')
+                    print(user_id)
+                    cursor = connection.cursor()
+                    sql = "SELECT * FROM RATED WHERE USER_IDRATE = %s AND SHOW_IDRATE = %s"
+                    cursor.execute(sql, [user_id, show_id])
+                    result = cursor.fetchall()
+                    cursor.close()
+
+                    cnt = 0
+                    prev_rate = 0
+                    for r in result:
+                        prev_rate = r[3]
+                        cnt += 1
+                    print(prev_rate)
+
+                    if cnt == 0:
+                        cursor = connection.cursor()
+                        sql = "INSERT INTO RATED VALUES(%s,%s,%s,%s)"
+                        cursor.execute(sql, [user_id, show_id, feedback, rate])
+                        cursor.close()
+                    else:
+                        cursor = connection.cursor()
+                        sql = "UPDATE RATED SET RATING_OUT_OF_FIVE = %s" \
+                              " WHERE USER_IDRATE = %s AND SHOW_IDRATE = %s"
+                        cursor.execute(sql, [rate, user_id, show_id])
+                        cursor.close()
+
+                        cursor = connection.cursor()
+                        sql = "SELECT COUNT(*) FROM RATED where SHOW_IDRATE = %s"
+                        cursor.execute(sql, [show_id])
+                        result_row_cnt = cursor.fetchall()
+                        tot_cnt = 0
+                        for r in result_row_cnt:
+                            tot_cnt = r[0]
+
+                        print(tot_cnt)
+                        cursor.close()
+
+
+                        cursor = connection.cursor()
+                        sql = "UPDATE SHOW SET USER_RATING = least(((USER_RATING*%s - %s + %s)/%s),5)" \
+                              " WHERE SHOW_ID = %s"
+                        cursor.execute(sql, [tot_cnt, prev_rate, rate, tot_cnt, show_id])
+                        cursor.close()
+
+
 
         cursor = connection.cursor()
         sql = "SELECT * FROM SHOW WHERE SHOW_ID = %s"
@@ -830,6 +905,27 @@ def single_show(response,show_id):
                 company_name = r_comp[0]
                 company_logo = r_comp[1]
 
+
+            #reviews
+
+            cursor = connection.cursor()
+            sql = "SELECT r.RATING_OUT_OF_FIVE, r.FEEDBACK, u.USER_FIRSTNAME, u.USER_LASTNAME FROM RATED r, USERS u" \
+                  " WHERE r.USER_IDRATE = u.USER_ID" \
+                  " AND r.SHOW_IDRATE = %s"
+            cursor.execute(sql, [show_id])
+            result_review = cursor.fetchall()
+            cursor.close()
+
+            review_list = []
+            review_count = 0
+            for r in result_review:
+                name = r[2]+" "+r[3]
+                row = {"rating_out_of_five": r[0],
+                       "feedback": r[1],
+                       "review_poster": name}
+                review_list.append(row)
+                review_count += 1
+
             #is subscribed?
 
 
@@ -884,7 +980,7 @@ def single_show(response,show_id):
             show_list.append(single_row)
             print("cl: "+company_logo)
 
-        return render(response,'home\single_show.html',{"shows": show_list})
+        return render(response, 'home\single_show.html', {"shows": show_list, "review_list": review_list , "review_count": review_count})
 
     else:
         return redirect("http://127.0.0.1:8000/user/login")
@@ -1011,6 +1107,8 @@ def subscribe_show(response,show_identifier):
 
                     if card_number == "" or exp_date == "" or username == "" or password == "":
                         error_msg = "No field can be left empty"
+                    elif card_number.isnumeric() == False:
+                        error_msg = "Invalid Card Number"
                     else:
                         cursor = connection.cursor()
                         sql = "SELECT * FROM CARD c" \
@@ -1024,6 +1122,8 @@ def subscribe_show(response,show_identifier):
 
                         cnt = 0
                         balance = 0
+
+
                         for r in result:
                             balance = r[4]
                             cnt += 1
@@ -1215,68 +1315,111 @@ def pushintoDBsettings(l,user_id,change):
 
     cursor = connection.cursor()
     sql = "UPDATE USERS SET USER_FIRSTNAME = %s, USER_LASTNAME = %s, PASSWORD = %s, PHONE_NO = %s, FAVOURITE_GENRE = %s WHERE USER_ID = %s"
-    cursor.execute(sql, [l[0],l[1],encrypted_password,l[2],l[3], user_id])
+    cursor.execute(sql, [l[0], l[1], encrypted_password, l[2], l[3], user_id])
     connection.commit()
+    cursor.close()
 
 def settings(response):
     error_msg = ""
     user_id = -1
     if response.session.get('is_logged_in', False) == True:
         user_id = response.session.get('user_ID', -1)
-    if response.POST.get("update"):
-        first_name = response.POST.get("fname")
-        last_name = response.POST.get("lname")
-        phone = response.POST.get("phone")
-        fav_gen = response.POST.get("fgenre")
-        password = response.POST.get("password")
-        confpass = response.POST.get("confpass")
+        if response.POST.get("update"):
+            first_name = response.POST.get("fname")
+            last_name = response.POST.get("lname")
+            phone = response.POST.get("phone")
+            fav_gen = response.POST.get("fgenre")
+            password = response.POST.get("password")
+            confpass = response.POST.get("confpass")
 
-        cursor = connection.cursor()
-        sql_show = "SELECT * FROM USERS WHERE USER_ID = %s"
-        cursor.execute(sql_show, [user_id])
-        result = cursor.fetchall()
-        for r in result:
-            f_name_db = r[2]
-            l_name_db = r[3]
-            pass_db = r[4]
-            phone_db = r[6]
-            genre_db = r[8]
-        cursor.close()
+            cursor = connection.cursor()
+            sql_show = "SELECT * FROM USERS WHERE USER_ID = %s"
+            cursor.execute(sql_show, [user_id])
+            result = cursor.fetchall()
+            for r in result:
+                f_name_db = r[2]
+                l_name_db = r[3]
+                pass_db = r[4]
+                phone_db = r[6]
+                genre_db = r[8]
+            cursor.close()
 
-        l = []
-        if first_name == "":
-            l.append(f_name_db)
-        else:
-            l.append(first_name)
+            l = []
+            if first_name == "":
+                l.append(f_name_db)
+            else:
+                l.append(first_name)
 
-        if last_name == "":
-            l.append(l_name_db)
-        else:
-            l.append(last_name)
+            if last_name == "":
+                l.append(l_name_db)
+            else:
+                l.append(last_name)
 
-        if phone == "":
-            l.append(phone_db)
-        else:
-            l.append(phone)
+            if phone == "":
+                l.append(phone_db)
+            else:
+                l.append(phone)
 
-        if fav_gen == "":
-            l.append(genre_db)
-        else:
-            l.append(fav_gen)
+            if fav_gen == "":
+                l.append(genre_db)
+            else:
+                l.append(fav_gen)
 
-        if password == "":
-            change = 0
-            l.append(pass_db)
-        else:
-            change = 1
-            l.append(password)
-        print(l)
+            if password == "":
+                change = 0
+                l.append(pass_db)
+            else:
+                change = 1
+                l.append(password)
+            print(l)
 
-        if len(password) < 8 and password != "":
-            error_msg = "Password should be at least 8 characters"
-        elif password != "" and password != confpass:
-            error_msg = "Passwords do not match"
-        else:
-            pushintoDBsettings(l, user_id, change)
-            return redirect("http://127.0.0.1:8000/home/")
+            if len(password) < 8 and password != "":
+                error_msg = "Password should be at least 8 characters"
+            elif password != "" and password != confpass:
+                error_msg = "Passwords do not match"
+            else:
+                pushintoDBsettings(l, user_id, change)
+                return redirect("http://127.0.0.1:8000/home/")
     return render(response, 'home\settings.html', {"error_msg": error_msg})
+
+def subscribed_show(response):
+    if response.session.get('is_logged_in', False) == True:
+        error_msg=""
+        user_id = response.session.get('user_ID', -1)
+        cursor = connection.cursor()
+        sql_subs = "SELECT * FROM SUBSCRIPTION WHERE USER_IDSUB = %s"
+        cursor.execute(sql_subs, [user_id])
+        result = cursor.fetchall()
+        #print(result)
+        cursor.close()
+        show_list=[]
+        cnt = 0
+        cnt_sub = 0
+        no_of_result=""
+        for r in result:
+            cnt_sub = cnt_sub+1
+            showID = r[4]
+            cursor = connection.cursor()
+            sql_sh = "SELECT * FROM SHOW WHERE SHOW_ID = %s"
+            cursor.execute(sql_sh, [showID])
+            result_main = cursor.fetchall()
+            #print(result_main)
+            for r_main in result_main:
+                cnt = cnt+1
+                show_id = r_main[0]
+                show_title = r_main[2]
+                show_genre = r_main[1]
+                show_imdb = r_main[5]
+                show_image = r_main[13]
+                single_row = {"show_id": show_id, "show_title": show_title, "show_genre": show_genre, "show_imdb": show_imdb,
+                              "show_image": show_image}
+                show_list.append(single_row)
+            no_of_result = str(cnt)
+            cursor.close()
+            print("Numbereeeererer")
+            print(no_of_result)
+        if cnt_sub == 0:
+            error_msg = "Sorry! You haven't subscribed for a single show!"
+        return render(response,'home\subscribed_show.html',{'no_of_results': no_of_result, 'shows': show_list,"error_msg":error_msg})
+    else:
+        return redirect("http://127.0.0.1:8000/user/login")
