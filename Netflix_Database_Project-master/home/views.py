@@ -2,6 +2,8 @@ from django.shortcuts import render,redirect
 from django.db import connection
 import re
 from django.http import HttpResponse
+from passlib.hash import pbkdf2_sha256
+
 # Create your views here.
 
 logged_in = False
@@ -1581,3 +1583,26 @@ def subscribed_show(response):
         return render(response,'home\subscribed_show.html',{'no_of_results': no_of_results, 'shows': show_list,"error_msg":error_msg})
     else:
         return redirect("http://127.0.0.1:8000/user/login")
+
+def profile_show(response):
+    if response.session.get('is_logged_in', False) == True:
+        user_id = response.session.get('user_ID', -1)
+        cursor = connection.cursor()
+        sql = "SELECT * FROM USERS WHERE USER_ID = %s"
+        cursor.execute(sql, [user_id])
+        result = cursor.fetchall()
+        cursor.close()
+        print(result)
+        for r in result:
+            userFname = r[2]
+            userLname = r[3]
+            Jdate = r[1]
+            Bday = r[5]
+            phone = r[6]
+            Favg = r[8]
+            gender = r[9]
+            mail = r[10]
+        print(type(Jdate))
+        print(type(Bday))
+        user_info = {"userFname":userFname,"userLname":userLname,"Jdate":Jdate,"Bday":Bday,"phone":phone,"Favg":Favg,"gender":gender,"mail":mail}
+        return render(response,'home\profile.html',{"user_info":user_info})

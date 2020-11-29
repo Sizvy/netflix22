@@ -30,7 +30,7 @@ urlpatterns = [
     path('subscribe/<str:show_identifier>/', views.subscribe_show, name="subscribe_show"),
     path('home/settings/',views.settings,name="settings"),
     path('home/subscribed_show/',views.subscribed_show,name="subscribed_show"),
-
+    path('home/profile/',views.profile_show,name="profile_show")
 
 
 ]
