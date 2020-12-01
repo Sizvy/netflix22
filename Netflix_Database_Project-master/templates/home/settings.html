@@ -17,14 +17,17 @@
 
 <!-- STYLE CSS -->
 <link rel="stylesheet" href="../../static/home/settings/css/style.css">
+
 {% endblock %}
+
+
 
 {% block content %}
 
 <div class="wrapper">
 	<div class="inner">
 		<img src="../../static/home/settings/images/image-1.png" alt="" class="image-1">
-		<form method="POST" onsubmit="return true">
+		<form action=""  method="POST" enctype="multipart/form-data">
 			{% csrf_token %}
 			<h3>Update account?</h3>
 			<div class="form-holder">
@@ -40,16 +43,17 @@
 				<input type="text" name="phone" class="form-control" placeholder="Update your Phone Number">
 			</div>
 			<div class="form-holder">
-				<span class="lnr lnr-user"></span>
-				<input type="text" name="fgenre" class="form-control" placeholder="Update your Favourite Genre">
-			</div>
-			<div class="form-holder">
 				<span class="lnr lnr-lock"></span>
 				<input type="password" name="password" class="form-control" placeholder="Update your Password">
 			</div>
 			<div class="form-holder">
 				<span class="lnr lnr-lock"></span>
+
 				<input type="password" name="confpass" class="form-control" placeholder="Confirm Password">
+			</div>
+            <div class="form-holder">
+                <label>Update your profile picture (.jpg , .png):</label>
+				<input  type="file" name="profile_pic">
 			</div>
 			<button name="update" type="submit" value="Update">
 				<span>Update</span>

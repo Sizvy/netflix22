@@ -1,9 +1,9 @@
 from django.shortcuts import render,redirect
 from django.db import connection
+
+from django.core.files.storage import FileSystemStorage
 import re
 from django.http import HttpResponse
-from passlib.hash import pbkdf2_sha256
-
 # Create your views here.
 
 logged_in = False
@@ -35,6 +35,10 @@ def home_notLoggedIn(response):
                 search_from = response.POST.get('from_year')
                 search_to = response.POST.get('to_year')
 
+
+
+                sort_val = ""
+
                 #print(search_type)
                 print(search_genre)
                 print(search_lang)
@@ -44,30 +48,47 @@ def home_notLoggedIn(response):
 
 
                 cursor = connection.cursor()
-                sql = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s,ACTOR a,ACT ac" \
-                      " WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND" \
-                      " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
-                      " UNION" \
-                      " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se"\
-                      " WHERE s.SERIES_ID = se.SERIES_ID" \
-                      " AND s.SEASON_NO = se.SEASON_NO" \
-                      " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
-                      " )" \
-                      " UNION" \
-                      " (" \
-                      " SELECT DISTINCT(s.SHOW_ID)" \
-                      " FROM SHOW s, DIRECTOR d" \
-                      " WHERE s.DIRECTOR_ID = d.PERSON_ID" \
-                      " AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" \
-                      " )" \
-                      " UNION" \
-                      " (" \
-                      " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                      " WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
-                      " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" \
-                      " )"
 
-                cursor.execute(sql,[search_pattern,search_pattern,search_pattern,search_pattern,search_pattern])
+                if sort_val != "":
+
+                    sql1 = "SELECT s.SHOW_ID FROM SHOW s,ACTOR a,ACT ac WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" + " ORDER BY s.YEAR DESC" + sort_val + " DESC "
+
+                    sql2 = "SELECT s.SHOW_ID FROM SHOW s, SERIES se WHERE s.SERIES_ID = se.SERIES_ID AND s.SEASON_NO = se.SEASON_NO AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" + " ORDER BY " + sort_val + " DESC "
+
+                    sql3 = "SELECT s.SHOW_ID FROM SHOW s, DIRECTOR d WHERE s.DIRECTOR_ID = d.PERSON_ID AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" + " ORDER BY " +sort_val + " DESC "
+
+                    sql4 = "SELECT (s.SHOW_ID FROM SHOW s WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s) OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" + " ORDER BY "+sort_val+" DESC "
+
+                    sql = "(" + sql1 + ") UNION (" + sql2 + ") UNION (" + sql3 + ") UNION (" + sql4 +" )"
+
+
+                else:
+                    sql = " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s,ACTOR a,ACT ac" \
+                          " WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND" \
+                          " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
+                          " UNION" \
+                          " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se"\
+                          " WHERE s.SERIES_ID = se.SERIES_ID" \
+                          " AND s.SEASON_NO = se.SEASON_NO" \
+                          " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
+                          " )" \
+                          " UNION" \
+                          " (" \
+                          " SELECT DISTINCT(s.SHOW_ID)" \
+                          " FROM SHOW s, DIRECTOR d" \
+                          " WHERE s.DIRECTOR_ID = d.PERSON_ID" \
+                          " AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" \
+                          " )" \
+                          " UNION" \
+                          " (" \
+                          " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                          " WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
+                          " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" \
+                          " )"
+
+                print(sql)
+                cursor.execute(sql, [search_pattern,search_pattern,search_pattern,search_pattern,search_pattern])
+
                 result = cursor.fetchall();
                 cursor.close()
 
@@ -93,13 +114,20 @@ def home_notLoggedIn(response):
 
                 print(search_to)
 
+
+
                 result_final = []
 
 
                 result_genre = []
                 if search_genre != "":
                     cursor = connection.cursor()
-                    sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+
+                    if sort_val != "":
+                        sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                                    " where regexp_replace(LOWER(s.GENRE), ' ','') Like (%s)" + " ORDER BY "+ sort_val + " DESC"
+                    else:
+                        sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
                                 " where regexp_replace(LOWER(s.GENRE), ' ','') Like (%s)"
                     cursor.execute(sql_genre, [search_genre])
                     result_genre = cursor.fetchall()
@@ -110,8 +138,13 @@ def home_notLoggedIn(response):
                 result_lang = []
                 if search_lang != "":
                     cursor = connection.cursor()
-                    sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                                " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)"
+
+                    if sort_val != "":
+                        sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                                " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)" + " ORDER BY "+ sort_val + " DESC"
+                    else:
+                        sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                                   " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)"
                     cursor.execute(sql_lang, [search_lang])
                     result_lang = cursor.fetchall()
                     cursor.close()
@@ -121,7 +154,10 @@ def home_notLoggedIn(response):
                 result_from = []
                 if search_from != "":
                     cursor = connection.cursor()
-                    sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s"
+                    if sort_val != "":
+                        sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s" + " ORDER BY "+ sort_val + " DESC"
+                    else:
+                        sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s"
                     cursor.execute(sql_from, [search_from])
                     result_from = cursor.fetchall()
                     cursor.close()
@@ -131,7 +167,11 @@ def home_notLoggedIn(response):
                 result_to = []
                 if search_to != "":
                     cursor = connection.cursor()
-                    sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s"
+                    if sort_val != "":
+                        sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s" + " ORDER BY " + sort_val + " DESC"
+                        print(sql_to)
+                    else:
+                        sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s"
                     cursor.execute(sql_to, [search_to])
                     result_to = cursor.fetchall()
                     cursor.close()
@@ -338,8 +378,8 @@ def shows(response, show_type):
                       " SELECT DISTINCT se.SERIES_ID,se.SEASON_NO FROM SERIES se,SHOW s" \
                       " WHERE s.SERIES_ID = se.SERIES_ID AND s.SEASON_NO = se.SEASON_NO AND" \
                       " LOWER(se.CATEGORY) like (%s) AND" \
-                      " regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
-                      " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" \
+                      " (regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
+                      " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s))" \
                       " )" \
                       " UNION" \
                       " (" \
@@ -666,7 +706,7 @@ def movies(response):
                 if search_to != "":
                     cursor = connection.cursor()
                     sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s AND" \
-                             " s.SERIES_ID IS NULL AND"
+                             " s.SERIES_ID IS NULL"
                     cursor.execute(sql_to, [search_to])
                     result_to = cursor.fetchall()
                     cursor.close()
@@ -745,6 +785,7 @@ def movies(response):
 
 
 def single_show(response,show_id):
+    print("in the single show")
     if response.session.get('is_logged_in', False) == True:
         ok = False
         rate = 0
@@ -807,12 +848,12 @@ def single_show(response,show_id):
 
                     if cnt == 0:
                         cursor = connection.cursor()
-                        sql = "INSERT INTO RATED VALUES(%s,%s,%s,%s)"
+                        sql = "INSERT INTO RATED VALUES(%s,%s,%s,%s,SYSDATE)"
                         cursor.execute(sql, [user_id, show_id, feedback, rate])
                         cursor.close()
                     else:
                         cursor = connection.cursor()
-                        sql = "UPDATE RATED SET RATING_OUT_OF_FIVE = %s" \
+                        sql = "UPDATE RATED SET RATING_OUT_OF_FIVE = %s, RATE_TIME = SYSDATE" \
                               " WHERE USER_IDRATE = %s AND SHOW_IDRATE = %s"
                         cursor.execute(sql, [rate, user_id, show_id])
                         cursor.close()
@@ -911,9 +952,11 @@ def single_show(response,show_id):
             #reviews
 
             cursor = connection.cursor()
-            sql = "SELECT r.RATING_OUT_OF_FIVE, r.FEEDBACK, u.USER_FIRSTNAME, u.USER_LASTNAME FROM RATED r, USERS u" \
+            sql = "SELECT r.RATING_OUT_OF_FIVE, r.FEEDBACK, u.USER_FIRSTNAME, u.USER_LASTNAME, TO_CHAR( r.RATE_TIME,'DD Mon YYYY' ), u.USER_ID" \
+                  " FROM RATED r, USERS u" \
                   " WHERE r.USER_IDRATE = u.USER_ID" \
-                  " AND r.SHOW_IDRATE = %s"
+                  " AND r.SHOW_IDRATE = %s" \
+                  " ORDER BY r.RATE_TIME DESC"
             cursor.execute(sql, [show_id])
             result_review = cursor.fetchall()
             cursor.close()
@@ -922,9 +965,12 @@ def single_show(response,show_id):
             review_count = 0
             for r in result_review:
                 name = r[2]+" "+r[3]
+                reviewer_id = r[5]
                 row = {"rating_out_of_five": r[0],
                        "feedback": r[1],
-                       "review_poster": name}
+                       "review_poster": name,
+                       "review_time": r[4],
+                       "reviewer_id": reviewer_id}
                 review_list.append(row)
                 review_count += 1
 
@@ -992,6 +1038,7 @@ def single_show(response,show_id):
 def single_series(response, series_identifier):
     if response.session.get('is_logged_in', False) == True:
         print("here")
+        reviewC = 0
         series_identifier = series_identifier.split("_")
         series_id = series_identifier[0]
         season_no = series_identifier[1]
@@ -1002,7 +1049,20 @@ def single_series(response, series_identifier):
         result = cursor.fetchall()
         cursor.close()
 
-
+        cursor = connection.cursor()
+        sql = "SELECT SHOW_ID FROM SHOW se WHERE se.SERIES_ID = %s AND se.SEASON_NO = %s"
+        cursor.execute(sql,[series_id,season_no])
+        result_show = cursor.fetchall()
+        for r in result_show:
+            show_id = r[0]
+            cursor = connection.cursor()
+            sql = "SELECT COUNT(*) FROM RATED se WHERE SHOW_IDRATE = %s"
+            cursor.execute(sql,[show_id])
+            result_rate = cursor.fetchall()
+            for r in result_rate:
+                reviewC = reviewC + r[0]
+        cursor.close()
+        cursor.close()
 
         title=""
         category=""
@@ -1067,11 +1127,10 @@ def single_series(response, series_identifier):
             is_subscribed = 1
 
 
-
         series = {"series_id":series_id,"season_no":season_no, "title": title, "category":category,
                   "start_year": start_year, "end_year": end_year, "cover_image": cover_image, "status": status,
                   "imdb_rating": imdb_rating, "user_rating": user_rating, "language": language, "genre": genre,
-                  "episode_list": show_list, "is_subscribed": is_subscribed}
+                  "episode_list": show_list, "is_subscribed": is_subscribed,"reviewC":reviewC}
         print(series)
 
         return render(response, 'home\series_view.html', {"series": series})
@@ -1173,6 +1232,13 @@ def subscribe_show(response,show_identifier):
                                 cursor.execute(sql, [sub_id, service_period, sub_status, user_id, show_id, bill_id])
                                 cursor.close()
                                 print("Successfully Subscribed")
+
+                                curs_id = int(user_id)
+                                print("curs_id"+str(curs_id))
+                                print(type(curs_id))
+                                cursor = connection.cursor()
+                                cursor.callproc('UPDATE_FAV_GENRE', [curs_id])
+                                cursor.close()
 
                                 return redirect("http://127.0.0.1:8000/movies/"+show_id+"/")
 
@@ -1307,83 +1373,6 @@ def subscribe_show(response,show_identifier):
 
 
 
-
-def pushintoDBsettings(l,user_id,change):
-    #encrypt password
-    if change == 1:
-        encrypted_password = pbkdf2_sha256.encrypt(l[4], rounds=12000, salt_size=32)
-    else:
-        encrypted_password = l[4]
-
-    cursor = connection.cursor()
-    sql = "UPDATE USERS SET USER_FIRSTNAME = %s, USER_LASTNAME = %s, PASSWORD = %s, PHONE_NO = %s, FAVOURITE_GENRE = %s WHERE USER_ID = %s"
-    cursor.execute(sql, [l[0], l[1], encrypted_password, l[2], l[3], user_id])
-    connection.commit()
-    cursor.close()
-
-def settings(response):
-    error_msg = ""
-    user_id = -1
-    if response.session.get('is_logged_in', False) == True:
-        user_id = response.session.get('user_ID', -1)
-        if response.POST.get("update"):
-            first_name = response.POST.get("fname")
-            last_name = response.POST.get("lname")
-            phone = response.POST.get("phone")
-            fav_gen = response.POST.get("fgenre")
-            password = response.POST.get("password")
-            confpass = response.POST.get("confpass")
-
-            cursor = connection.cursor()
-            sql_show = "SELECT * FROM USERS WHERE USER_ID = %s"
-            cursor.execute(sql_show, [user_id])
-            result = cursor.fetchall()
-            for r in result:
-                f_name_db = r[2]
-                l_name_db = r[3]
-                pass_db = r[4]
-                phone_db = r[6]
-                genre_db = r[8]
-            cursor.close()
-
-            l = []
-            if first_name == "":
-                l.append(f_name_db)
-            else:
-                l.append(first_name)
-
-            if last_name == "":
-                l.append(l_name_db)
-            else:
-                l.append(last_name)
-
-            if phone == "":
-                l.append(phone_db)
-            else:
-                l.append(phone)
-
-            if fav_gen == "":
-                l.append(genre_db)
-            else:
-                l.append(fav_gen)
-
-            if password == "":
-                change = 0
-                l.append(pass_db)
-            else:
-                change = 1
-                l.append(password)
-            print(l)
-
-            if len(password) < 8 and password != "":
-                error_msg = "Password should be at least 8 characters"
-            elif password != "" and password != confpass:
-                error_msg = "Passwords do not match"
-            else:
-                pushintoDBsettings(l, user_id, change)
-                return redirect("http://127.0.0.1:8000/home/")
-    return render(response, 'home\settings.html', {"error_msg": error_msg})
-
 def subscribed_show(response):
     error_msg=""
     no_of_results=""
@@ -1417,6 +1406,14 @@ def subscribed_show(response):
                       " sub.USER_IDSUB = %s AND" \
                       " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
                       " UNION" \
+                      " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se, SUBSCRIPTION sub" \
+                      " WHERE s.SERIES_ID = se.SERIES_ID" \
+                      " AND s.SEASON_NO = se.SEASON_NO" \
+                      " AND s.SHOW_ID = sub.SHOW_IDSUB" \
+                      " AND sub.USER_IDSUB = %s" \
+                      " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
+                      " )" \
+                      " UNION" \
                       " (" \
                       " SELECT DISTINCT(s.SHOW_ID)" \
                       " FROM SHOW s, DIRECTOR d, SUBSCRIPTION sub" \
@@ -1432,7 +1429,7 @@ def subscribed_show(response):
                       " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s))" \
                       " )"
 
-                cursor.execute(sql, [user_id, search_pattern, user_id, search_pattern, user_id, search_pattern, search_pattern])
+                cursor.execute(sql, [user_id, search_pattern, user_id, search_pattern, user_id, search_pattern, user_id, search_pattern, search_pattern])
                 result = cursor.fetchall();
                 cursor.close()
 
@@ -1580,29 +1577,182 @@ def subscribed_show(response):
                 print(no_of_results)
             if cnt_sub == 0:
                 error_msg = "Sorry! You haven't subscribed for a single show!"
-        return render(response,'home\subscribed_show.html',{'no_of_results': no_of_results, 'shows': show_list,"error_msg":error_msg})
+        return render(response,'home\homepage.html',{'no_of_results': no_of_results, 'shows': show_list,"error_msg":error_msg})
     else:
         return redirect("http://127.0.0.1:8000/user/login")
 
-def profile_show(response):
+
+
+
+def pushintoDBsettings(l,user_id,change):
+    #encrypt password
+    if change == 1:
+        encrypted_password = pbkdf2_sha256.encrypt(l[4], rounds=12000, salt_size=32)
+    else:
+        encrypted_password = l[4]
+
+    cursor = connection.cursor()
+    sql = "UPDATE USERS SET USER_FIRSTNAME = %s, USER_LASTNAME = %s, PASSWORD = %s, PHONE_NO = %s, PHOTO = %s WHERE USER_ID = %s"
+    cursor.execute(sql, [l[0], l[1], encrypted_password, l[2], l[4], user_id])
+    connection.commit()
+    cursor.close()
+
+def settings(response):
+    error_msg = ""
+    user_id = -1
     if response.session.get('is_logged_in', False) == True:
         user_id = response.session.get('user_ID', -1)
+        if response.method == "POST":
+            if response.POST.get("update"):
+                first_name = response.POST.get("fname")
+                last_name = response.POST.get("lname")
+                phone = response.POST.get("phone")
+                password = response.POST.get("password")
+                confpass = response.POST.get("confpass")
+
+                print(response.FILES)
+                file_ok = True
+                pp = False
+                try:
+                    if response.FILES["profile_pic"]:
+                        myfile = response.FILES["profile_pic"]
+
+                        print(myfile.name)
+                        f_name = myfile.name
+                        f_name = f_name.split(".")
+                        ext = ""
+                        for f in f_name:
+                            ext = f
+                        print(ext)
+
+                        file_ok = False
+                        if ext.lower() == "jpg" or ext.lower() == "png":
+                            file_ok = True
+
+                        if file_ok:
+                            fs = FileSystemStorage()
+                            filename = fs.save(myfile.name, myfile)
+                            uploaded_file_url = "../.."
+                            uploaded_file_url += fs.url(filename)
+                            print(uploaded_file_url)
+                            pp = True
+
+                except Exception:
+                    print("Exception occured not receiving any file")
+
+
+                cursor = connection.cursor()
+                sql_show = "SELECT * FROM USERS WHERE USER_ID = %s"
+                cursor.execute(sql_show, [user_id])
+                result = cursor.fetchall()
+                for r in result:
+                    f_name_db = r[2]
+                    l_name_db = r[3]
+                    pass_db = r[4]
+                    phone_db = r[6]
+                    photo_db = r[11]
+                cursor.close()
+
+                l = []
+                if first_name == "":
+                    l.append(f_name_db)
+                else:
+                    l.append(first_name)
+
+                if last_name == "":
+                    l.append(l_name_db)
+                else:
+                    l.append(last_name)
+
+                if phone == "":
+                    l.append(phone_db)
+                else:
+                    l.append(phone)
+
+                if password == "":
+                    change = 0
+                    l.append(pass_db)
+                else:
+                    change = 1
+                    l.append(password)
+                if pp:
+                    l.append(uploaded_file_url)
+                else:
+                    l.append(photo_db)
+                print(l)
+
+                if len(password) < 8 and password != "":
+                    error_msg = "Password should be at least 8 characters"
+                elif password != "" and password != confpass:
+                    error_msg = "Passwords do not match"
+                elif file_ok == False:
+                    error_msg = "File has to be an image"
+                else:
+                    pushintoDBsettings(l, user_id, change)
+                    return redirect("http://127.0.0.1:8000/home/")
+
+        return render(response, "home/settings.html", {"error_msg": error_msg})
+
+    else:
+        return redirect("http://127.0.0.1:8000/user/login/")
+
+
+def profile_show(response, user_id):
+    if response.session.get('is_logged_in', False) == True:
+
+        print(user_id)
+        my_profile = 0
+        if user_id == "my_profile":
+            id = response.session.get('user_ID')
+            my_profile = 1
+        else:
+            id = user_id
         cursor = connection.cursor()
-        sql = "SELECT * FROM USERS WHERE USER_ID = %s"
-        cursor.execute(sql, [user_id])
+        sql = "SELECT USER_FIRSTNAME,USER_LASTNAME,TO_CHAR(JOIN_DATE,'MON dd, YYYY'),TO_CHAR(DATE_OF_BIRTH,'MON dd, YYYY')," \
+              " PHONE_NO,FAVOURITE_GENRE,GENDER,EMAIL,PHOTO" \
+              " FROM USERS WHERE USER_ID = %s"
+        cursor.execute(sql, [id])
         result = cursor.fetchall()
         cursor.close()
         print(result)
         for r in result:
-            userFname = r[2]
-            userLname = r[3]
-            Jdate = r[1]
-            Bday = r[5]
-            phone = r[6]
-            Favg = r[8]
-            gender = r[9]
-            mail = r[10]
-        print(type(Jdate))
-        print(type(Bday))
-        user_info = {"userFname":userFname,"userLname":userLname,"Jdate":Jdate,"Bday":Bday,"phone":phone,"Favg":Favg,"gender":gender,"mail":mail}
-        return render(response,'home\profile.html',{"user_info":user_info})
+            userFname = r[0]
+            userLname = r[1]
+            Jdate = r[2]
+            Bday = r[3]
+            phone = r[4]
+            Favg = r[5]
+            gender = r[6]
+            mail = r[7]
+            photo = r[8]
+
+        cursor = connection.cursor()
+        sql = "SELECT COUNT(sub.SUBSCRIPTION_ID) FROM SUBSCRIPTION sub where sub.USER_IDSUB = %s"
+        cursor.execute(sql, [id])
+        result = cursor.fetchall()
+        cursor.close()
+
+        for r in result:
+            no_of_subs = r[0]
+
+        cursor = connection.cursor()
+        sql = "SELECT COUNT(d.DOWNLOAD_ID) FROM DOWNLOAD_HISTORY d, SUBSCRIPTION sub, USERS u" \
+              " WHERE d.SUB_ID = sub.SUBSCRIPTION_ID" \
+              " AND sub.USER_IDSUB = %s"
+        cursor.execute(sql, [id])
+        result = cursor.fetchall()
+        cursor.close()
+
+        for r in result:
+            no_of_downloads = r[0]
+
+        user_info = {"userFname":userFname, "userLname":userLname, "Jdate":Jdate,
+                     "Bday":Bday,"phone":phone,"Favg":Favg,"gender":gender,
+                     "mail":mail,"profile_pic": photo,"no_of_subs": no_of_subs, "no_of_downloads": no_of_downloads}
+
+
+
+        if my_profile == 1:
+            return render(response, 'home\profile.html', {"user_info": user_info, "my_profile": my_profile})
+        else:
+            return render(response, 'home\profile_review.html', {"user_info": user_info, "my_profile": my_profile})

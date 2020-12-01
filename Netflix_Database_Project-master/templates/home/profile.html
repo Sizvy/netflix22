@@ -17,34 +17,43 @@
 <!-- STYLE CSS -->
 <link rel="stylesheet" href="../../static/home/settings/css/style.css">
 {% endblock %}
+
+
 {% block content %}
 
+<div class="wrap_card">
 <article class="cssui-usercard">
     <div class="cssui-usercard__body">
         <header class="cssui-usercard__header">
-            <img src="https://stas-melnikov.ru/cliparts/stas.jpg" class="cssui-usercard__avatar" alt="Avatar">
+            {% if user_info.gender == "male" %}
+                <img src={{ user_info.profile_pic }} class="cssui-usercard__avatar" alt="NOT FOUND" onerror=this.src="../../media/avatar_male.jpg">
+            {% else %}
+                <img src={{ user_info.profile_pic }} class="cssui-usercard__avatar" alt="NOT FOUND" onerror=this.src="../../media/avatar_female.jpg">
+            {% endif %}
             <div class="cssui-usercard__header-info">
                 <h3 class="cssui-usercard__name">{{user_info.userFname}} <span class="cssui-usercard__name-label">{{user_info.userLname}}</span></h3>
             </div>
         </header>
+
+
         <div class="cssui-usercard__content">
             <div class="cssui-slider">
 
                 <!-- the control elements of slider -->
-
                 <input id="slide1" type="radio" class="cssui-slider__switch cssui-usercard__switch" name="slider-controls" checked autofocus>
                 <label for="slide1" class="cssui-slider__control cssui-usercard__control"></label>
-                <input id="slide2" type="radio" class="cssui-slider__switch cssui-usercard__switch" name="slider-controls">
+
+
+                    <!-- first slide -->
+
+                    <input id="slide2" type="radio" class="cssui-slider__switch cssui-usercard__switch" name="slider-controls">
                 <label for="slide2" class="cssui-slider__control cssui-usercard__control"></label>
                 <input id="slide3" type="radio" class="cssui-slider__switch cssui-usercard__switch" name="slider-controls">
                 <label for="slide3" class="cssui-slider__control cssui-usercard__control"></label>
 
                 <div class="cssui-slider__slides">
-
-                    <!-- first slide -->
-
                     <div class="cssui-slider__slide">
-                        <h4 class="cssui-usercard__title">About me</h4>
+                        <h4 class="cssui-usercard__title">About</h4>
                         <div class="cssui-usercard__stats">
                             <div class="cssui-stats cssui-usercard__stats-item">
                                 <i class="cssui-icon icon-earth"></i>
@@ -80,43 +89,30 @@
                     <!-- second slide -->
 
                     <div class="cssui-slider__slide">
-                        <h4 class="cssui-usercard__title">My Skills</h4>
+                        <h4 class="cssui-usercard__title">Stats</h4>
                         <div class="cssui-usercard__stats">
                             <div class="cssui-stats cssui-usercard__stats-item">
                                 <i class="cssui-icon icon-html"></i>
                                 <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">HTML</span>
-                                    <span class="cssui-stats__value">85%</span>
+                                    <span class="cssui-stats__name cssui-usercard__stats-name">SUBSCRIPTIONS</span>
+                                    <span class="cssui-stats__value">{{ user_info.no_of_subs }}</span>
                                 </div>
                             </div>
                             <div class="cssui-stats cssui-usercard__stats-item">
                                 <i class="cssui-icon icon-vue"></i>
                                 <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">VUE</span>
-                                    <span class="cssui-stats__value">90%</span>
+                                    <span class="cssui-stats__name cssui-usercard__stats-name">DOWNLOADS</span>
+                                    <span class="cssui-stats__value">{{ user_info.no_of_downloads }}</span>
                                 </div>
                             </div>
-                            <div class="cssui-stats cssui-usercard__stats-item">
-                                <i class="cssui-icon icon-angular"></i>
-                                <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">AngularJS</span>
-                                    <span class="cssui-stats__value">70%</span>
-                                </div>
-                            </div>
-                            <div class="cssui-stats cssui-usercard__stats-item">
-                                <i class="cssui-icon icon-js"></i>
-                                <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">NodeJS</span>
-                                    <span class="cssui-stats__value">82%</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
 
                     <!-- third slide -->
 
                     <div class="cssui-slider__slide">
-                        <h4 class="cssui-usercard__title">My Contacts</h4>
+                        <h4 class="cssui-usercard__title">Contacts</h4>
                         <div class="cssui-usercard__stats">
                             <div class="cssui-stats cssui-usercard__stats-item">
                                 <i class="cssui-icon icon-email"></i>
@@ -132,26 +128,15 @@
                                     <a href="tel:79000000000" class="cssui-stats__value">0{{user_info.phone}}</a>
                                 </div>
                             </div>
-                            <div class="cssui-stats cssui-usercard__stats-item">
-                                <i class="cssui-icon icon-whatsapp"></i>
-                                <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">WhatsApp</span>
-                                    <span class="cssui-stats__value">+880{{user_info.phone}}</span>
-                                </div>
-                            </div>
-                            <div class="cssui-stats cssui-usercard__stats-item">
-                                <i class="cssui-icon icon-skype"></i>
-                                <div class="cssui-stats__info cssui-usercard__stats-info">
-                                    <span class="cssui-stats__name cssui-usercard__stats-name">Skype</span>
-                                    <span class="cssui-stats__value">{{user_info.userFname}} {{user_info.userLname}}</span>
-                                </div>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+
     <footer class="cssui-usercard__footer">
         <a href="#0" class="cssui-social cssui-usercard__social">
             <i class="cssui-icon icon-twitter"></i>
@@ -167,17 +152,34 @@
         </a>
     </footer>
 </article>
+</div>
+
+
+
 <style>
     /*
     * user card
     */
+    .wrap_card{
+          height: 100vh;
+          background: url("../../static/home/profile/images/bg.jpg") no-repeat center;
+          background-size: cover;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0;
+          padding: 0;
+          font-family: Consolas;
+          box-sizing: border-box;
+          text-decoration: none;
+    }
 
     .cssui-usercard {
         box-sizing: border-box;
         display: flex;
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
         flex-direction: column;
-        background-color: #fff;
+        background-color: WHITE;
         margin: 2rem auto 1rem;
         position: relative;
         z-index: 5;
@@ -207,7 +209,7 @@
         padding: 3rem 5% 2rem;
         display: flex;
         align-items: center;
-        background-image: linear-gradient(to bottom, #3F51B5, #041886);
+        background-image: linear-gradient(to bottom, #666699, #29465b);
         color: #fff;
     }
 
@@ -216,11 +218,13 @@
         border: 4px solid #fff;
         box-sizing: border-box;
         margin-right: 4%;
-        width: 10rem;
-        height: 10rem;
+        width: 50%;
+        height: auto;
     }
 
     .cssui-usercard__name {
+        color: white;
+        font-family: Consolas;
         font-size: 3.5rem;
         font-weight: 300;
         margin-top: 0;
@@ -241,8 +245,9 @@
         margin-bottom: 3rem;
         font-size: 2.4rem;
         font-weight: 300;
-        color: #fff;
-        background-color: #041886;
+        color: palevioletred;
+        font-family: Consolas;
+        background-color: #29465b;
     }
 
     .cssui-stats {
@@ -287,14 +292,14 @@
 
     .cssui-usercard__stats-name {
         font-weight: 700;
-        font-size: 1.6rem;
+        font-size: 18px;
     }
 
     .cssui-usercard__footer {
         padding: 1.5rem 4%;
         text-align: center;
-        background-color: #3F51B5;
-        color: #fff;
+        background-color: #29465b;
+        color: #29465b;
     }
 
     .cssui-icon {

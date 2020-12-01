@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="../../static/home/single_show/css/plugins.css">
 	<link rel="stylesheet" href="../../static/home/single_show/css/style.css">
     <script src="../../static/home/single_show/js/main.js" defer></script>
-
-
 {% endblock %}
+
+
 
 {% block content %}
 
@@ -101,7 +101,6 @@
 								<li class="active"><a href="#overview">Overview</a></li>
 								<li><a href="#reviews"> Reviews</a></li>
 								<li><a href="#cast">  Cast & Crew </a></li>
-								<li><a href="#media"> Media</a></li>
 								<li><a href="http://127.0.0.1:8000/genre/{{ show.show_genre }}"> Related SHOWS</a></li>
 							</ul>
 						    <div class="tab-content">
@@ -127,7 +126,7 @@
 												<a href="#" class="time">Full Cast & Crew  <i class="ion-ios-arrow-right"></i></a>
 											</div>
 											<!-- movie cast -->
-											<div class="mvcast-item">
+											<div class="mvcast-item" id="cast">
                                                 {% for actor in show.actor_list %}
 												<div class="cast-it">
 
@@ -144,7 +143,7 @@
 											</div>
 											<!-- movie user review -->
 											{% for review in review_list%}
-										<div class="mv-user-review-item">
+										<div class="mv-user-review-item" id="reviews">
 											<div class="user-infor">
 												<img src="images/uploads/userava1.jpg" alt="">
 												<div>
@@ -204,7 +203,8 @@
 													</div>
                                                     {% endif %}
 													<p class="time">
-														<a href="#">{{ review.review_poster }}</a>
+													{{ review.review_time }}
+                                                        <a class="reviewer" id={{ review.reviewer_id }}>{{ review.review_poster }}</a>
 													</p>
 												</div>
 											</div>
@@ -240,8 +240,8 @@
 						            			<p>{{ show.show_imdb }}</p>
 						            		</div>
 						            		<div class="sb-it">
-						            			<h6>MMPA Rating:</h6>
-						            			<p>PG-{{ show.show_age_limit }}</p>
+						            			<h6>Age limit:</h6>
+						            			<p>{{ show.show_age_limit }}+</p>
 						            		</div>
 						            		<div class="sb-it">
 						            			<h6>Plot Keywords:</h6>
@@ -693,6 +693,7 @@
 
 
 
+
     {% endfor %}
 
 
@@ -806,6 +807,11 @@ input {
           form.submit();
 
 
+    });
+
+    $('.reviewer').on("click", function(evt) {
+         var id = $(this).attr('id');
+        window.location = "http://127.0.0.1:8000/profile/"+id;
     });
 });
 
