@@ -19,12 +19,14 @@ from django.urls import path
 
 from django.conf import settings
 from django.conf.urls.static import static
+from streaming import views as views_stream
 
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^user/', include('accounts.urls')),
-    path('', include('home.urls'))
+    path('', include('home.urls')),
+    path('stream/stream_shows/<str:file_name>/', views_stream.stream_video, name="stream_show"),
 ]
 
 if settings.DEBUG:

@@ -17,6 +17,7 @@ Including another URLconf
 from django.urls import path
 from django.conf.urls import url
 from . import views
+from streaming import views as views_stream
 
 urlpatterns = [
     path('', views.home_notLoggedIn),

@@ -126,3 +126,6 @@ dmypy.json
 
 .idea
 .vs
+*.mp4
+*.mkv
+*.mov

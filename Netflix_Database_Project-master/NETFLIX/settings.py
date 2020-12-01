@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'accounts',
     #home app
     'home',
+    #streaming app
+    'streaming',
 ]
 
 MIDDLEWARE = [

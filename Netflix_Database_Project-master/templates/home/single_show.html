@@ -47,8 +47,8 @@
 						</div>
                         {% elif show.is_sub == 1 %}
                         <div class="btn-transform transform-vertical red">
-							<div><a href="#" class="item item-1 redbtn"> <i class="ion-play"></i> DOWNLOAD</a></div>
-							<div><a href="https://www.youtube.com/embed/o-0hcF97wy0" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
+							<div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-1 redbtn"> <i class="ion-play"></i> Stream</a></div>
+							<div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
 						</div>
 
                             {%if show.is_series == 0 %}
@@ -240,8 +240,8 @@
 						            			<p>{{ show.show_imdb }}</p>
 						            		</div>
 						            		<div class="sb-it">
-						            			<h6>Age limit:</h6>
-						            			<p>{{ show.show_age_limit }}+</p>
+						            			<h6>MMPA Rating:</h6>
+						            			<p>PG-{{ show.show_age_limit }}</p>
 						            		</div>
 						            		<div class="sb-it">
 						            			<h6>Plot Keywords:</h6>
