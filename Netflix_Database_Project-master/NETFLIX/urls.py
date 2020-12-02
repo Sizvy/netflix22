@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^user/', include('accounts.urls')),
     path('', include('home.urls')),
     path('stream/stream_shows/<str:file_name>/', views_stream.stream_video, name="stream_show"),
+    path('stream/download_shows/<str:file_name>/', views_stream.download_video, name="download_show"),
 ]
 
 if settings.DEBUG:

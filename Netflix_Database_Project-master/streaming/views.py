@@ -5,7 +5,7 @@ import os
 import re
 import mimetypes
 from wsgiref.util import FileWrapper
-
+from django.http import HttpResponse
 from django.http.response import StreamingHttpResponse
 
 
@@ -65,6 +65,7 @@ def stream_video(request, file_name):
             resp = StreamingHttpResponse(RangeFileWrapper(open(path, 'rb'), offset=first_byte, length=length), status=206, content_type=content_type)
             resp['Content-Length'] = str(length)
             resp['Content-Range'] = 'bytes %s-%s/%s' % (first_byte, last_byte, size)
+            print('bytes %s-%s/%s' % (first_byte, last_byte, size))
         else:
             print("not range_match")
             resp = StreamingHttpResponse(FileWrapper(open(path, 'rb')), content_type=content_type)
@@ -72,5 +73,19 @@ def stream_video(request, file_name):
         resp['Accept-Ranges'] = 'bytes'
         print("at the end")
         return resp
+    else:
+        return redirect("http://127.0.0.1:8000/user/login")
+
+def download_video(request,file_name):
+    if request.session.get('is_logged_in'):
+        print("here in download")
+        path = "E:\\"+file_name
+        if os.path.exists(path):
+            with open(path,'rb') as fh:
+                print("got the movie")
+                response = HttpResponse(fh.read(),content_type = "application/force-download")
+                response['Content-Disposition'] = 'inline;file_name'
+                return response
+        raise Http404
     else:
         return redirect("http://127.0.0.1:8000/user/login")
