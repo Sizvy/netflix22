@@ -51,8 +51,8 @@
 							<div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
 						</div>
 						<div class="btn-transform transform-vertical red">
-							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}/" class="item item-1 redbtn"> <i class="ion-play"></i> Download</a></div>
-							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
+							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}-{{ show.show_id }}/" class="item item-1 redbtn"> <i class="ion-play"></i> Download</a></div>
+							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}-{{ show.show_id }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
 						</div>
 						{%if show.is_series == 0 %}
 						<div class="btn-transform transform-vertical">

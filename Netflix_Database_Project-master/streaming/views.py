@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.db import connection
 
 #streaming part
 import os
@@ -76,11 +77,59 @@ def stream_video(request, file_name):
     else:
         return redirect("http://127.0.0.1:8000/user/login")
 
+def pushintoDhistory(show_id,user_id):
+    print(show_id)
+    print(user_id)
+    #generate download_id
+    cursor = connection.cursor()
+    sql_ID = "SELECT NVL(MAX(DOWNLOAD_ID),0) FROM DOWNLOAD_HISTORY"
+    cursor.execute(sql_ID)
+    result = cursor.fetchall()
+    for i in result:
+        down_ID = i[0]
+    cursor.close()
+    down_ID = down_ID+1
+    print(down_ID)
+
+    #get subscription_id
+    cursor = connection.cursor()
+    sql = "SELECT SUBSCRIPTION_ID FROM SUBSCRIPTION WHERE USER_IDSUB = %s AND  SHOW_IDSUB = %s"
+    cursor.execute(sql,[user_id,show_id])
+    result = cursor.fetchall()
+    for i in result:
+        sub_ID = i[0]
+    cursor.close()
+    print(sub_ID)
+
+    #generate download time
+    cursor = connection.cursor()
+    curr_date_sql = "SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD') FROM dual"
+    curr_date_list = cursor.execute(curr_date_sql)
+    for i in curr_date_list:
+        curr_date = str(i[0])
+    print(curr_date)
+    cursor.close()
+    isFav = "no"
+    #insert into download_history
+    cursor = connection.cursor()
+    sql = "INSERT INTO DOWNLOAD_HISTORY VALUES(%s, %s, %s, %s)"
+    cursor.execute(sql, [down_ID,curr_date,isFav,sub_ID])
+    connection.commit()
+    cursor.close()
+
+
+
 def download_video(request,file_name):
     if request.session.get('is_logged_in'):
+        user_id = request.session.get('user_ID', -1)
         print("here in download")
-        path = "E:\\"+file_name
+        file_name = file_name.split("-")
+        print(file_name[0])
+        print(file_name[1])
+        show_id = file_name[1]
+        path = "E:\\"+file_name[0]
         if os.path.exists(path):
+            pushintoDhistory(show_id,user_id)
             with open(path,'rb') as fh:
                 print("got the movie")
                 response = HttpResponse(fh.read(),content_type = "application/force-download")

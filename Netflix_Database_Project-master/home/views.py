@@ -1739,7 +1739,7 @@ def profile_show(response, user_id):
             no_of_subs = r[0]
 
         cursor = connection.cursor()
-        sql = "SELECT COUNT(d.DOWNLOAD_ID) FROM DOWNLOAD_HISTORY d, SUBSCRIPTION sub, USERS u" \
+        sql = "SELECT COUNT(d.DOWNLOAD_ID) FROM DOWNLOAD_HISTORY d, SUBSCRIPTION sub" \
               " WHERE d.SUB_ID = sub.SUBSCRIPTION_ID" \
               " AND sub.USER_IDSUB = %s"
         cursor.execute(sql, [id])
