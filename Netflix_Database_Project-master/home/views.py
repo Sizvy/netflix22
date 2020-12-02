@@ -1759,3 +1759,214 @@ def profile_show(response, user_id):
             return render(response, 'home\profile.html', {"user_info": user_info, "my_profile": my_profile})
         else:
             return render(response, 'home\profile_review.html', {"user_info": user_info, "my_profile": my_profile})
+
+
+def downloaded_show(response):
+    error_msg=""
+    no_of_results=""
+    if response.session.get('is_logged_in', False) == True:
+        user_id = response.session.get('user_ID', -1)
+        if response.method == "POST":
+            print("here")
+            if response.POST.get("search_button") == "clicked":
+                print(response.POST)
+                search_item = response.POST.get('search_field')
+                search_item = search_item.replace(" ", "")
+                search_pattern = "%" + search_item.lower() + "%"
+
+                print(search_pattern)
+
+                # search_type = response.POST.get('type')
+                search_genre = response.POST.get('genre')
+                search_lang = response.POST.get('language')
+                search_from = response.POST.get('from_year')
+                search_to = response.POST.get('to_year')
+
+                # print(search_type)
+                print(search_genre)
+                print(search_lang)
+                print(search_from)
+                print(search_to)
+
+                cursor = connection.cursor()
+                sql = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s,ACTOR a,ACT ac, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                      " WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND" \
+                      " sub.USER_IDSUB = %s AND" \
+                      " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
+                      " UNION" \
+                      " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                      " WHERE s.SERIES_ID = se.SERIES_ID" \
+                      " AND s.SEASON_NO = se.SEASON_NO" \
+                      " AND s.SHOW_ID = sub.SHOW_IDSUB" \
+                      " AND sub.SUBSCRIPTION_ID = dh.SUB_ID" \
+                      " AND sub.USER_IDSUB = %s" \
+                      " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
+                      " )" \
+                      " UNION" \
+                      " (" \
+                      " SELECT DISTINCT(s.SHOW_ID)" \
+                      " FROM SHOW s, DIRECTOR d, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                      " WHERE s.DIRECTOR_ID = d.PERSON_ID AND s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND" \
+                      " sub.USER_IDSUB = %s AND" \
+                      " regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" \
+                      " )" \
+                      " UNION" \
+                      " (" \
+                      " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                      " WHERE s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND sub.USER_IDSUB = %s AND" \
+                      " (regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
+                      " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s))" \
+                      " )"
+
+                cursor.execute(sql, [user_id, search_pattern, user_id, search_pattern, user_id, search_pattern, user_id, search_pattern, search_pattern])
+                result = cursor.fetchall();
+                cursor.close()
+
+                print(type(result))
+
+                search_genre = response.POST.get('genre')
+                search_genre = search_genre.replace(" ", "")
+                search_genre = "%" + search_genre.lower() + "%"
+                print(search_genre)
+
+                search_lang = response.POST.get('language')
+                search_lang = search_lang.replace(" ", "")
+                search_lang = "%" + search_lang.lower() + "%"
+
+                print(search_lang)
+
+                search_from = response.POST.get('from_year')
+
+                print(search_from)
+
+                search_to = response.POST.get('to_year')
+
+                print(search_to)
+
+                result_final = []
+
+                result_genre = []
+                if search_genre != "":
+                    cursor = connection.cursor()
+                    sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                                " where s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND regexp_replace(LOWER(s.GENRE), ' ','') Like (%s) AND" \
+                                " sub.USER_IDSUB = %s"
+                    cursor.execute(sql_genre, [search_genre,user_id])
+                    result_genre = cursor.fetchall()
+                    cursor.close()
+                else:
+                    result_genre = result
+
+                result_lang = []
+                if search_lang != "":
+                    cursor = connection.cursor()
+                    sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh" \
+                               " WHERE s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s) AND" \
+                               " sub.USER_IDSUB = %s"
+                    cursor.execute(sql_lang, [search_lang,user_id])
+                    result_lang = cursor.fetchall()
+                    cursor.close()
+                else:
+                    result_lang = result
+
+                result_from = []
+                if search_from != "":
+                    cursor = connection.cursor()
+                    sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh where s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND s.YEAR >= %s AND " \
+                               " sub.USER_IDSUB = %s"
+                    cursor.execute(sql_from, [search_from,user_id])
+                    result_from = cursor.fetchall()
+                    cursor.close()
+                else:
+                    result_from = result
+
+                result_to = []
+                if search_to != "":
+                    cursor = connection.cursor()
+                    sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SUBSCRIPTION sub, DOWNLOAD_HISTORY dh where s.SHOW_ID = sub.SHOW_IDSUB AND sub.SUBSCRIPTION_ID = dh.SUB_ID AND s.YEAR <= %s AND " \
+                               " sub.USER_IDSUB = %s"
+                    cursor.execute(sql_to, [search_to,user_id])
+                    result_to = cursor.fetchall()
+                    cursor.close()
+                else:
+                    result_to = result
+
+                result_temp = set(result_genre).intersection(set(result_from).intersection(result_to))
+                result_temp_new = set(result_temp).intersection(set(result_lang))
+                result_final = set(result).intersection(result_temp_new)
+
+                error_msg = "No Result Found!"
+                show_list = []
+
+                cnt = 0
+                for r in result_final:
+                    cnt = cnt + 1
+                    print(type(r))
+                    show_id = r[0]
+                    print(show_id)
+                    cursor = connection.cursor()
+                    sql = "SELECT * FROM SHOW WHERE SHOW_ID = %s"
+                    cursor.execute(sql, [show_id])
+                    show_res = cursor.fetchall()
+                    cursor.close()
+                    print("here")
+
+                    for r_temp in show_res:
+                        show_title = r_temp[2]
+                        show_genre = r_temp[1]
+                        show_des = r_temp[3]
+                        show_age = r_temp[4]
+                        show_lang = r_temp[8]
+                        show_image = r_temp[13]
+                        show_imdb = r_temp[5]
+                        single_row = {
+                                      "show_id": show_id,
+                                      "show_imdb": show_imdb,
+                                      "show_title": show_title,
+                                      "show_genre": show_genre,
+                                      "show_des": show_des,
+                                      "show_age": show_age,
+                                      "show_lang": show_lang,
+                                      "show_image": show_image}
+                        show_list.append(single_row)
+                        error_msg = ""
+                no_of_results = str(cnt)
+        else:
+            cursor = connection.cursor()
+            sql_subs = "SELECT sub.SHOW_IDSUB FROM SUBSCRIPTION sub, DOWNLOAD_HISTORY dh WHERE sub.SUBSCRIPTION_ID = dh.SUB_ID AND USER_IDSUB = %s"
+            cursor.execute(sql_subs, [user_id])
+            result = cursor.fetchall()
+            #print(result)
+            cursor.close()
+            show_list=[]
+            cnt = 0
+            cnt_sub = 0
+            no_of_result=""
+            for r in result:
+                cnt_sub = cnt_sub+1
+                showID = r[0]
+                cursor = connection.cursor()
+                sql_sh = "SELECT * FROM SHOW WHERE SHOW_ID = %s"
+                cursor.execute(sql_sh, [showID])
+                result_main = cursor.fetchall()
+                #print(result_main)
+                for r_main in result_main:
+                    cnt = cnt+1
+                    show_id = r_main[0]
+                    show_title = r_main[2]
+                    show_genre = r_main[1]
+                    show_imdb = r_main[5]
+                    show_image = r_main[13]
+                    single_row = {"show_id": show_id, "show_title": show_title, "show_genre": show_genre, "show_imdb": show_imdb,
+                                  "show_image": show_image}
+                    show_list.append(single_row)
+                no_of_results = str(cnt)
+                cursor.close()
+                print("Numbereeeererer")
+                print(no_of_results)
+            if cnt_sub == 0:
+                error_msg = "Sorry! You haven't downloaded a single show!"
+        return render(response,'home\homepage.html',{'no_of_results': no_of_results, 'shows': show_list,"error_msg":error_msg})
+    else:
+        return redirect("http://127.0.0.1:8000/user/login")
+
