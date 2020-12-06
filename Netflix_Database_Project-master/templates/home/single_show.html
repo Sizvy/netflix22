@@ -40,27 +40,28 @@
 					<img src={{ show.show_image }} , width = 400px, height=1000px>
 					<div class="movie-btn">
 
-						{% if show.is_sub == 0 and show.is_series == 0%}
+                        {% if show.is_sub == 0 and show.is_series == 0%}
 						<div class="btn-transform transform-vertical">
 							<div><a href="http://127.0.0.1:8000/subscribe/show_{{ show.show_id }}" class="item item-1 yellowbtn"> <i class="ion-card"></i> SUBSCRIBE</a></div>
 							<div><a href="http://127.0.0.1:8000/subscribe/show_{{ show.show_id }}" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
 						</div>
-						{% elif show.is_sub == 1 %}
-						<div class="btn-transform transform-vertical red">
+                        {% elif show.is_sub == 1 %}
+                        <div class="btn-transform transform-vertical red">
 							<div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-1 redbtn"> <i class="ion-play"></i> Stream</a></div>
-							<div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
+                            <div><a href="http://127.0.0.1:8000/stream/stream_shows/{{ show.file_name }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
 						</div>
-						<div class="btn-transform transform-vertical red">
+
+                        <div class="btn-transform transform-vertical red">
 							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}-{{ show.show_id }}/" class="item item-1 redbtn"> <i class="ion-play"></i> Download</a></div>
 							<div><a href="http://127.0.0.1:8000/stream/download_shows/{{ show.file_name }}-{{ show.show_id }}/" class="item item-2 redbtn fancybox-media hvr-grow"><i class="ion-play"></i></a></div>
 						</div>
-						{%if show.is_series == 0 %}
-						<div class="btn-transform transform-vertical">
-							<div><a href="http://127.0.0.1:8000/unsubscribe/show_{{ show.show_id }}" class="item item-1 yellowbtn"> <i class="ion-card"></i> UNSUBSCRIBE</a></div>
-							<div><a href="http://127.0.0.1:8000/unsubscribe/show_{{ show.show_id }}" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
-						</div>
-						{% endif %}
-						{% endif %}
+                            {%if show.is_series == 0 %}
+                                <div class="btn-transform transform-vertical">
+                                    <div><a href="http://127.0.0.1:8000/unsubscribe/show_{{ show.show_id }}" class="item item-1 yellowbtn"> <i class="ion-card"></i> UNSUBSCRIBE</a></div>
+                                    <div><a href="http://127.0.0.1:8000/unsubscribe/show_{{ show.show_id }}" class="item item-2 yellowbtn"><i class="ion-card"></i></a></div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
 					</div>
 				</div>
 			</div>
@@ -103,33 +104,20 @@
 							<ul class="tab-links tabs-mv">
 								<li class="active"><a href="#overview">Overview</a></li>
 								<li><a href="#reviews"> Reviews</a></li>
-								<li><a href="#cast">  Cast & Crew </a></li>
-								<li><a href="http://127.0.0.1:8000/genre/{{ show.show_genre }}"> Related SHOWS</a></li>
+								<li><a href="#cast_and_crews">  Cast & Crew </a></li>
+								<li><a href="http://127.0.0.1:8000/genre/{{ show.show_genre }}"> Related Shows</a></li>
 							</ul>
 						    <div class="tab-content">
 						        <div id="overview" class="tab active">
 						            <div class="row">
 						            	<div class="col-md-8 col-sm-12 col-xs-12">
                                             <p>{{ show.show_des }}</p>
-						            		<div class="title-hd-sm">
-												<h4>Videos & Photos</h4>
-												<a href="#" class="time">All 5 Videos & 245 Photos <i class="ion-ios-arrow-right"></i></a>
-											</div>
-											<div class="mvsingle-item ov-item">
-												<a class="img-lightbox"  data-fancybox-group="gallery" href="../../static/home/single_show/css/images/uploads/image11.jpg" ><img src="../../static/home/single_show/css/images/uploads/image1.jpg" alt=""></a>
-												<a class="img-lightbox"  data-fancybox-group="gallery" href="../../static/home/single_show/css/images/uploads/image21.jpg" ><img src="../../static/home/single_show/css/images/uploads/image2.jpg" alt=""></a>
-												<a class="img-lightbox"  data-fancybox-group="gallery" href="../../static/home/single_show/css/images/uploads/image31.jpg" ><img src="../../static/home/single_show/css/images/uploads/image3.jpg" alt=""></a>
-												<div class="vd-it">
-													<img class="vd-img" src="../../static/home/single_show/css/images/uploads/image4.jpg" alt="">
-													<a class="fancybox-media hvr-grow" href="https://www.youtube.com/embed/o-0hcF97wy0"><img src="../../static/home/single_show/css/images/uploads/play-vd.png" alt=""></a>
-												</div>
-											</div>
-											<div class="title-hd-sm">
+											<div id="cast_and_crews"class="title-hd-sm">
 												<h4>cast</h4>
 												<a href="#" class="time">Full Cast & Crew  <i class="ion-ios-arrow-right"></i></a>
 											</div>
 											<!-- movie cast -->
-											<div class="mvcast-item" id="cast">
+											<div class="mvcast-item">
                                                 {% for actor in show.actor_list %}
 												<div class="cast-it">
 
@@ -146,7 +134,7 @@
 											</div>
 											<!-- movie user review -->
 											{% for review in review_list%}
-										<div class="mv-user-review-item" id="reviews">
+										<div id = "reviews" class="mv-user-review-item">
 											<div class="user-infor">
 												<img src="images/uploads/userava1.jpg" alt="">
 												<div>
@@ -244,7 +232,7 @@
 						            		</div>
 						            		<div class="sb-it">
 						            			<h6>Age Limit:</h6>
-						            			<p>{{ show.show_age_limit }}+</p>
+						            			<p>{{ show.show_age_limit }} +</p>
 						            		</div>
 						            		<div class="sb-it">
 						            			<h6>Plot Keywords:</h6>
