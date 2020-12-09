@@ -35,4 +35,7 @@ urlpatterns = [
     path('profile/<str:user_id>/',views.profile_show,name="profile_show"),
     path('home/downloads/',views.downloads,name="downloads"),
 
+
+
+
 ]

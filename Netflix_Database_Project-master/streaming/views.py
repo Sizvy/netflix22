@@ -105,42 +105,13 @@ def pushintoDhistory(show_id,user_id):
     cursor.close()
     print(sub_ID)
 
-    #checking wheather the show is already downloaded by the same user
-    already = 0
-    cursor = connection.cursor()
-    sql = "SELECT * FROM DOWNLOAD_HISTORY"
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    for i in result:
-        if sub_ID == i[3]:
-            already = 1
-    cursor.close()
-    print("alreadyyyyyyyyy")
-    print(already)
-
-    #generate download time
-    cursor = connection.cursor()
-    curr_date_sql = "SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD') FROM dual"
-    curr_date_list = cursor.execute(curr_date_sql)
-    for i in curr_date_list:
-        curr_date = str(i[0])
-    print(curr_date)
-    cursor.close()
     isFav = "no"
-
     #insert into download_history
-    if already == 0:
-        cursor = connection.cursor()
-        sql = "INSERT INTO DOWNLOAD_HISTORY VALUES(%s, %s, %s, %s)"
-        cursor.execute(sql, [down_ID,curr_date,isFav,sub_ID])
-        connection.commit()
-        cursor.close()
-    else:
-        cursor = connection.cursor()
-        sql = "UPDATE DOWNLOAD_HISTORY SET DOWNLOAD_TIME = %s WHERE SUB_ID = %s"
-        cursor.execute(sql, [curr_date,sub_ID])
-        connection.commit()
-        cursor.close()
+    cursor = connection.cursor()
+    sql = "INSERT INTO DOWNLOAD_HISTORY VALUES(%s, SYSDATE, %s, %s)"
+    cursor.execute(sql, [down_ID, isFav,sub_ID])
+    connection.commit()
+    cursor.close()
 
 
 

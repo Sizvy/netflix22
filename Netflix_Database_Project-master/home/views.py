@@ -2,6 +2,8 @@ from django.shortcuts import render,redirect
 from django.db import connection
 
 from django.core.files.storage import FileSystemStorage
+
+from operator import itemgetter
 import re
 from django.http import HttpResponse
 # Create your views here.
@@ -34,57 +36,44 @@ def home_notLoggedIn(response):
                 search_lang = response.POST.get('language')
                 search_from = response.POST.get('from_year')
                 search_to = response.POST.get('to_year')
+                sort_by = response.POST.get('sort_by')
 
 
-
-                sort_val = ""
 
                 #print(search_type)
                 print(search_genre)
                 print(search_lang)
                 print(search_from)
                 print(search_to)
+                print(sort_by)
 
 
 
                 cursor = connection.cursor()
 
-                if sort_val != "":
 
-                    sql1 = "SELECT s.SHOW_ID FROM SHOW s,ACTOR a,ACT ac WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" + " ORDER BY s.YEAR DESC" + sort_val + " DESC "
-
-                    sql2 = "SELECT s.SHOW_ID FROM SHOW s, SERIES se WHERE s.SERIES_ID = se.SERIES_ID AND s.SEASON_NO = se.SEASON_NO AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" + " ORDER BY " + sort_val + " DESC "
-
-                    sql3 = "SELECT s.SHOW_ID FROM SHOW s, DIRECTOR d WHERE s.DIRECTOR_ID = d.PERSON_ID AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" + " ORDER BY " +sort_val + " DESC "
-
-                    sql4 = "SELECT (s.SHOW_ID FROM SHOW s WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s) OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" + " ORDER BY "+sort_val+" DESC "
-
-                    sql = "(" + sql1 + ") UNION (" + sql2 + ") UNION (" + sql3 + ") UNION (" + sql4 +" )"
-
-
-                else:
-                    sql = " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s,ACTOR a,ACT ac" \
-                          " WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND" \
-                          " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
-                          " UNION" \
-                          " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se"\
-                          " WHERE s.SERIES_ID = se.SERIES_ID" \
-                          " AND s.SEASON_NO = se.SEASON_NO" \
-                          " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
-                          " )" \
-                          " UNION" \
-                          " (" \
-                          " SELECT DISTINCT(s.SHOW_ID)" \
-                          " FROM SHOW s, DIRECTOR d" \
-                          " WHERE s.DIRECTOR_ID = d.PERSON_ID" \
-                          " AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" \
-                          " )" \
-                          " UNION" \
-                          " (" \
-                          " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                          " WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
-                          " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" \
-                          " )"
+                sql = " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s,ACTOR a,ACT ac" \
+                      " WHERE s.SHOW_ID = ac.SHOW_IDACT AND ac.ACTOR_IDACT = a.PERSON_ID AND" \
+                      " regexp_replace(LOWER(a.ACTOR_FIRST_NAME || ' ' || a.ACTOR_LAST_NAME), ' ','') like (%s)" \
+                      " UNION" \
+                      " (SELECT DISTINCT(s.SHOW_ID) FROM SHOW s, SERIES se"\
+                      " WHERE s.SERIES_ID = se.SERIES_ID" \
+                      " AND s.SEASON_NO = se.SEASON_NO" \
+                      " AND regexp_replace(LOWER(se.TITLE), ' ','') like (%s)" \
+                      " )" \
+                      " UNION" \
+                      " (" \
+                      " SELECT DISTINCT(s.SHOW_ID)" \
+                      " FROM SHOW s, DIRECTOR d" \
+                      " WHERE s.DIRECTOR_ID = d.PERSON_ID" \
+                      " AND regexp_replace(LOWER (d.DIRECTOR_FIRST_NAME || ' ' || d.DIRECTOR_LAST_NAME), ' ','') like (%s)" \
+                      " )" \
+                      " UNION" \
+                      " (" \
+                      " SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                      " WHERE regexp_replace(LOWER(s.TITLE), ' ','') like (%s)" \
+                      " OR regexp_replace(LOWER(s.GENRE), ' ','') like (%s)" \
+                      " )"
 
                 print(sql)
                 cursor.execute(sql, [search_pattern,search_pattern,search_pattern,search_pattern,search_pattern])
@@ -115,20 +104,11 @@ def home_notLoggedIn(response):
                 print(search_to)
 
 
-
-                result_final = []
-
-
                 result_genre = []
                 if search_genre != "":
                     cursor = connection.cursor()
-
-                    if sort_val != "":
-                        sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                                    " where regexp_replace(LOWER(s.GENRE), ' ','') Like (%s)" + " ORDER BY "+ sort_val + " DESC"
-                    else:
-                        sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                                " where regexp_replace(LOWER(s.GENRE), ' ','') Like (%s)"
+                    sql_genre = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                                " WHERE regexp_replace(LOWER(s.GENRE), ' ','') Like (%s)"
                     cursor.execute(sql_genre, [search_genre])
                     result_genre = cursor.fetchall()
                     cursor.close()
@@ -138,13 +118,8 @@ def home_notLoggedIn(response):
                 result_lang = []
                 if search_lang != "":
                     cursor = connection.cursor()
-
-                    if sort_val != "":
-                        sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                                " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)" + " ORDER BY "+ sort_val + " DESC"
-                    else:
-                        sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
-                                   " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)"
+                    sql_lang = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s" \
+                                " WHERE regexp_replace(LOWER(s.LANGUAGE), ' ','') Like (%s)"
                     cursor.execute(sql_lang, [search_lang])
                     result_lang = cursor.fetchall()
                     cursor.close()
@@ -154,10 +129,7 @@ def home_notLoggedIn(response):
                 result_from = []
                 if search_from != "":
                     cursor = connection.cursor()
-                    if sort_val != "":
-                        sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s" + " ORDER BY "+ sort_val + " DESC"
-                    else:
-                        sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s"
+                    sql_from = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR >= %s"
                     cursor.execute(sql_from, [search_from])
                     result_from = cursor.fetchall()
                     cursor.close()
@@ -167,11 +139,7 @@ def home_notLoggedIn(response):
                 result_to = []
                 if search_to != "":
                     cursor = connection.cursor()
-                    if sort_val != "":
-                        sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s" + " ORDER BY " + sort_val + " DESC"
-                        print(sql_to)
-                    else:
-                        sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s"
+                    sql_to = "SELECT DISTINCT(s.SHOW_ID) FROM SHOW s where s.YEAR <= %s"
                     cursor.execute(sql_to, [search_to])
                     result_to = cursor.fetchall()
                     cursor.close()
@@ -209,6 +177,7 @@ def home_notLoggedIn(response):
                         show_lang = r_temp[8]
                         show_image = r_temp[13]
                         show_imdb = r_temp[5]
+                        show_urating = r_temp[6]
                         single_row = {
                                       "show_id": show_id,
                                       "show_imdb": show_imdb,
@@ -217,19 +186,24 @@ def home_notLoggedIn(response):
                                       "show_des": show_des,
                                       "show_age": show_age,
                                       "show_lang": show_lang,
-                                      "show_image": show_image}
+                                      "show_image": show_image,
+                                      "show_user_rating": show_urating}
                         show_list.append(single_row)
                         error_msg = ""
+
+                    #sort
+                    if sort_by == "USER RATING(D)":
+                        show_list = sorted(show_list, key=itemgetter('show_user_rating'), reverse=True)
+                    if sort_by == "USER RATING(A)":
+                        show_list = sorted(show_list, key=itemgetter('show_user_rating'), reverse=False)
+                    if sort_by == "IMDB RATING(D)":
+                        show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=True)
+                    if sort_by == "IMDB RATING(A)":
+                        show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=False)
+
                 no_of_results = str(cnt)
 
         else:
-            cursor = connection.cursor()
-            sql = "SELECT * FROM USERS WHERE USER_ID = %s"
-            cursor.execute(sql, id)
-            result = cursor.fetchall()
-            cursor.close()
-            for r in result:
-                first_name = r[2]
             cursor = connection.cursor()
             sql = "SELECT * FROM SHOW"
             cursor.execute(sql)
@@ -253,23 +227,6 @@ def home_notLoggedIn(response):
 
     else:
         return redirect("http://127.0.0.1:8000/user/login")
-
-#not used anymore, might use in future
-def home_LoggedIn(request,user_ID):
-    #Home page specific to user
-    print(user_ID)
-
-    if 'is_logged_in' in request.session:
-        if user_ID == request.session.get('user_ID',-1) and request.session.get('is_logged_in', False) == True:
-            #return HttpResponse('This is User_ID' + str(user_ID))
-            return render(request,"home/homepage.html")
-        else:
-            print("not logged in")
-            return redirect("http://127.0.0.1:8000/user/login/")
-
-    else:
-        print("not logged in")
-        return redirect("http://127.0.0.1:8000/user/login/")
 
 
 def log_out(request):
@@ -359,6 +316,7 @@ def shows(response, show_type):
                 search_comp = response.POST.get('production')
                 search_status = response.POST.get('status')
                 search_lang = response.POST.get('language')
+                sort_by = response.POST.get('sort_by')
 
                 # print(search_type)
                 print(search_genre)
@@ -507,20 +465,31 @@ def shows(response, show_type):
                         series_identifier = str(series_id) + "_" + str(season_no)
 
                         cursor = connection.cursor()
-                        sql = "SELECT AVG(s.IMDB_RATING) FROM SHOW s,Series se" \
+                        sql = "SELECT AVG(s.IMDB_RATING),AVG(s.USER_RATING) FROM SHOW s,Series se" \
                               " Where s.SERIES_ID = %s and s.SEASON_NO = %s "
                         cursor.execute(sql, [series_id, season_no])
                         res = cursor.fetchall()
                         cursor.close()
 
                         imdb_rating = 0
+                        user_rating = 0
                         for r in res:
                             imdb_rating = round(r[0], 2)
+                            user_rating = round(r[1], 2)
 
                         single_row = {"show_id": series_id, "show_title": show_title, "show_genre": season_no, "show_imdb": imdb_rating,
-                                      "show_image": show_image, "series_identifier": series_identifier}
+                                      "show_image": show_image, "series_identifier": series_identifier, "user_rating": user_rating}
                         show_list.append(single_row)
                         error_msg = ""
+                # sort
+                if sort_by == "USER RATING(D)":
+                    show_list = sorted(show_list, key=itemgetter('user_rating'), reverse=True)
+                if sort_by == "USER RATING(A)":
+                    show_list = sorted(show_list, key=itemgetter('user_rating'), reverse=False)
+                if sort_by == "IMDB RATING(D)":
+                    show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=True)
+                if sort_by == "IMDB RATING(A)":
+                    show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=False)
                 no_of_results = str(cnt)
 
         else:
@@ -585,6 +554,9 @@ def shows(response, show_type):
 
 
 
+
+
+
 def movies(response):
     error_msg = ""
     no_of_results = ""
@@ -609,6 +581,7 @@ def movies(response):
                 search_lang = response.POST.get('language')
                 search_from = response.POST.get('from_year')
                 search_to = response.POST.get('to_year')
+                sort_by = response.POST.get('sort_by')
 
                 # print(search_type)
                 print(search_genre)
@@ -738,6 +711,7 @@ def movies(response):
                         show_lang = r_temp[8]
                         show_image = r_temp[13]
                         show_imdb = r_temp[5]
+                        show_urating = r_temp[6]
                         single_row = {
                                       "show_id": show_id,
                                       "show_imdb": show_imdb,
@@ -746,9 +720,19 @@ def movies(response):
                                       "show_des": show_des,
                                       "show_age": show_age,
                                       "show_lang": show_lang,
-                                      "show_image": show_image}
+                                      "show_image": show_image,
+                                      "show_user_rating": show_urating}
                         show_list.append(single_row)
                         error_msg = ""
+                    # sort
+                    if sort_by == "USER RATING(D)":
+                        show_list = sorted(show_list, key=itemgetter('show_user_rating'), reverse=True)
+                    if sort_by == "USER RATING(A)":
+                        show_list = sorted(show_list, key=itemgetter('show_user_rating'), reverse=False)
+                    if sort_by == "IMDB RATING(D)":
+                        show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=True)
+                    if sort_by == "IMDB RATING(A)":
+                        show_list = sorted(show_list, key=itemgetter('show_imdb'), reverse=False)
                 no_of_results = str(cnt)
 
         else:
@@ -991,16 +975,20 @@ def single_show(response,show_id):
                 is_sub = 1
 
             cursor = connection.cursor()
-            sql = "SELECT NVL(s.SERIES_ID, -1) from SHOW s WHERE s.SHOW_ID = %s"
+            sql = "SELECT NVL(s.SERIES_ID, -1),NVL(s.SEASON_NO,-1) from SHOW s WHERE s.SHOW_ID = %s"
             cursor.execute(sql, [show_id])
             result_is_series = cursor.fetchall()
             cursor.close()
 
             is_series = 0
+            series_id = -1
+            season_no = -1
             for r_is_series in result_is_series:
                 if r_is_series[0] == -1:
                     is_series = 0
                 else:
+                    series_id = r_is_series[0]
+                    season_no = r_is_series[1]
                     is_series = 1
 
 
@@ -1022,7 +1010,9 @@ def single_show(response,show_id):
                           "company_name": company_name,
                           "company_logo": company_logo,
                           "is_sub": is_sub,
-                          "is_series": is_series}
+                          "is_series": is_series,
+                          "series_id": series_id,
+                          "season_no": season_no}
 
             show_list.append(single_row)
             print("cl: "+company_logo)
@@ -1128,12 +1118,41 @@ def single_series(response, series_identifier):
             cursor.close()
         cursor.close()
 
+        #reviews
+        cursor = connection.cursor()
+        sql = "SELECT r.RATING_OUT_OF_FIVE, r.FEEDBACK, u.USER_FIRSTNAME, u.USER_LASTNAME, TO_CHAR( r.RATE_TIME,'DD Mon YYYY' ), u.USER_ID,s.TITLE" \
+              " FROM RATED r, USERS u,SHOW s" \
+              " WHERE r.USER_IDRATE = u.USER_ID" \
+              " AND r.SHOW_IDRATE = s.SHOW_ID" \
+              " AND s.SERIES_ID = %s" \
+              " AND s.SEASON_NO = %s" \
+              " ORDER BY r.RATE_TIME DESC"
+        cursor.execute(sql, [series_id,season_no])
+        result_review = cursor.fetchall()
+        cursor.close()
+
+        review_list = []
+        review_count = 0
+        for r in result_review:
+            name = r[2] + " " + r[3]
+            reviewer_id = r[5]
+            row = {"rating_out_of_five": r[0],
+                   "feedback": r[1],
+                   "review_poster": name,
+                   "review_time": r[4],
+                   "reviewer_id": reviewer_id,
+                   "review_episode": r[6]}
+            review_list.append(row)
+            review_count += 1
+
+        print(review_list)
+
 
 
         series = {"series_id":series_id,"season_no":season_no, "title": title, "category":category,
                   "start_year": start_year, "end_year": end_year, "cover_image": cover_image, "status": status,
                   "imdb_rating": imdb_rating, "user_rating": user_rating, "language": language, "genre": genre,
-                  "episode_list": show_list, "is_subscribed": is_subscribed, "no_of_reviews": reviewC}
+                  "episode_list": show_list, "is_subscribed": is_subscribed, "no_of_reviews": reviewC, "review_list": review_list}
         print(series)
 
         return render(response, 'home\series_view.html', {"series": series})
@@ -1203,13 +1222,11 @@ def subscribe_show(response,show_identifier):
 
                                 # generate bill_id
                                 cursor = connection.cursor()
-                                sql_ID = "SELECT NVL(MAX(BILL_ID),0) FROM BILLING_HISTORY"
-                                cursor.execute(sql_ID)
-                                result = cursor.fetchall()
-                                for i in result:
-                                    bill_id = i[0]
+                                bill_id = cursor.callfunc('GIVEMAXBILLID',int)
+
+                                print("Calling Function")
+                                print(bill_id)
                                 cursor.close()
-                                bill_id = bill_id + 1
 
                                 bill_desc = "EMPTY"
                                 service_period = 6
@@ -1220,13 +1237,11 @@ def subscribe_show(response,show_identifier):
 
                                 # generate sub_id
                                 cursor = connection.cursor()
-                                sql_ID = "SELECT NVL(MAX(SUBSCRIPTION_ID),0) FROM SUBSCRIPTION"
-                                cursor.execute(sql_ID)
-                                result_sub = cursor.fetchall()
-                                for i in result_sub:
-                                    sub_id = i[0]
+                                sub_id = cursor.callfunc('GIVEMAXSUBID',int)
+
+                                print("Calling Function")
+                                print(sub_id)
                                 cursor.close()
-                                sub_id = sub_id + 1
 
                                 sub_status = "ACTIVE"
                                 cursor = connection.cursor()
@@ -1319,13 +1334,11 @@ def subscribe_show(response,show_identifier):
 
                             # generate bill_id
                             cursor = connection.cursor()
-                            sql_ID = "SELECT NVL(MAX(BILL_ID),0) FROM BILLING_HISTORY"
-                            cursor.execute(sql_ID)
-                            result = cursor.fetchall()
-                            for i in result:
-                                bill_id = i[0]
+                            bill_id = cursor.callfunc('GIVEMAXBILLID',int)
+
+                            print("Calling Function")
+                            print(bill_id)
                             cursor.close()
-                            bill_id = bill_id + 1
 
                             bill_desc = "EMPTY"
                             service_period = 6
@@ -1340,13 +1353,11 @@ def subscribe_show(response,show_identifier):
                                 print(show_id)
                                 # generate sub_id
                                 cursor = connection.cursor()
-                                sql_ID = "SELECT NVL(MAX(SUBSCRIPTION_ID),0) FROM SUBSCRIPTION"
-                                cursor.execute(sql_ID)
-                                result_sub = cursor.fetchall()
-                                for i in result_sub:
-                                    sub_id = i[0]
+                                sub_id = cursor.callfunc('GIVEMAXSUBID',int)
+
+                                print("Calling Function")
+                                print(sub_id)
                                 cursor.close()
-                                sub_id = sub_id + 1
 
                                 sub_status = "ACTIVE"
                                 cursor = connection.cursor()
@@ -1743,7 +1754,7 @@ def settings(response):
                     error_msg = "File has to be an image"
                 else:
                     pushintoDBsettings(l, user_id, change)
-                    return redirect("http://127.0.0.1:8000/profile/my_profile/")
+                    return redirect("http://127.0.0.1:8000/home/")
 
         return render(response, "home/settings.html", {"error_msg": error_msg})
 
@@ -1790,7 +1801,7 @@ def profile_show(response, user_id):
             no_of_subs = r[0]
 
         cursor = connection.cursor()
-        sql = "SELECT COUNT(d.DOWNLOAD_ID) FROM DOWNLOAD_HISTORY d, SUBSCRIPTION sub" \
+        sql = "SELECT COUNT(d.DOWNLOAD_ID) FROM DOWNLOAD_HISTORY d, SUBSCRIPTION sub, USERS u" \
               " WHERE d.SUB_ID = sub.SUBSCRIPTION_ID" \
               " AND sub.USER_IDSUB = %s"
         cursor.execute(sql, [id])

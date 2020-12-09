@@ -1,0 +1,69 @@
+﻿{% extends 'home/base.html' %}
+{% block tags %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add show</title>
+<link href="../../static/home/home_page/css/bootstrap.min.css" rel="stylesheet">
+<link href="../../static/home/home_page/css/effects.min.css" rel="stylesheet">
+
+<!-- Main css -->
+<link rel="stylesheet" href="../../static/home/index/css/style.css">
+{% endblock %}
+
+{% block content %}
+{% if isAllowed == "0" %}
+<h1>YOU ARE NOT AN ADMIN</h1>
+{% else %}
+<form method="POST" class="register-form" id="register-form">
+    {% csrf_token %}
+    <h2>Fill Up the Show Informations</h2>
+    <table>
+        <tbody>
+            <tr>
+                <td><input type="text" name="title" class="form-control" placeholder="SHOW TITLE" required></td>
+                <td><input type="text" name="genre" class="form-control" placeholder="SHOW GENRE" required></td>
+                <td><input type="text" name="desc" class="form-control" placeholder="SHOW DESCRIPTION" required></td>
+                <td><input type="text" name="imdb" class="form-control" placeholder="IMDB RATING" required></td>
+                <td><input type="text" name="age" class="form-control" placeholder="AGE LIMIT" required></td>
+                <td><input type="text" name="release" class="form-control" placeholder="RELEASE YEAR" required></td>
+                <td><input type="text" name="language" class="form-control" placeholder="Language" required></td>
+                <td><input type="text" name="filename" class="form-control" placeholder="File name" required></td>
+                <td><input type="file" name="cover" class="form-control" placeholder="SHOW COVER"></td>
+            </tr>
+        </tbody>
+    </table>
+    <br><br>
+    <h2>Fill Up the Director Informations</h2>
+    <table>
+        <tbody>
+            <tr>
+                <td><input type="text" name="fname" class="form-control" placeholder="First Name" required></td>
+                <td><input type="text" name="lname" class="form-control" placeholder="Last Name" required></td>
+                <td><input type="text" name="country" class="form-control" placeholder="Country" required></td>
+                <td><input type="text" name="link" class="form-control" placeholder="Wiki Link" required></td>
+                <td><input type="text" name="genreK" class="form-control" placeholder="Genre Known For"></td>
+            </tr>
+        </tbody>
+    </table>
+    <br><br>
+    <h2>Fill Up the Production Company Informations</h2>
+    <table>
+        <tbody>
+            <tr>
+                <td><input type="text" name="cname" class="form-control" placeholder="Name" required></td>
+                <td><input type="text" name="clocation" class="form-control" placeholder="Location" required></td>
+                <td><input type="text" name="fyear" class="form-control" placeholder="Foundation Year" required></td>
+                <td><input type="file" name="logo" class="form-control" placeholder="Logo"></td>
+            </tr>
+        </tbody>
+    </table>
+    <br><br>
+    <input type="submit" value="Submit" class="submit" name="submit" id="submit" />
+</form>
+    {% endif %}
+<!-- JS-->
+<script src="../../static/home/index/vendor/jquery/jquery.min.js"></script>
+<script src="../../static/home/index/js/main.js"></script>
+<script src="../../static/home/home_page/js/production.min.js"></script>
+
+{% endblock %}

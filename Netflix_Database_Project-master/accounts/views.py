@@ -35,15 +35,13 @@ def is_already_taken(e):
 def push_into_db(l):
 
     #generate user id
+    
     cursor = connection.cursor()
-    sql_ID = "SELECT NVL(MAX(USER_ID),0) FROM USERS"
-    cursor.execute(sql_ID)
-    result = cursor.fetchall()
-    for i in result:
-        ID = i[0]
-    cursor.close()
-    ID = ID+1
+    ID = cursor.callfunc('GIVEMAXUSERID',int)
+
+    print("Calling Function")
     print(ID)
+    cursor.close()
 
 
     #current date

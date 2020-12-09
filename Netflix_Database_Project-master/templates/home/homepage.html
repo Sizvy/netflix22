@@ -111,13 +111,28 @@
                   </select>
                 </div>
               </div>
-
-
             </div>
+
+              <div class="row first">
+                <div class="input-field">
+                <div class="input-select">
+                  <select data-trigger="" name="sort_by">
+                    <option placeholder="" value="">SORT BY:</option>
+                      <option>IMDB RATING(D)</option>
+                      <option>IMDB RATING(A)</option>
+                      <option>USER RATING(D)</option>
+                      <option>USER RATING(A)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="row third">
               <div class="input-field">
                 <div class="result-count">
                   <span> </span>{{ no_of_results }} results</div>
+
+
                 <div class="group-btn">
                   <button class="btn-delete" id="delete">Reset</button>
                   <button class="btn-search" name="search_button" value="clicked">Search</button>
